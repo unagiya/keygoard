@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(goimports:*)",
+      "Bash(make build:*)",
+      "Bash(gofmt:*)",
+      "Bash(go test:*)",
+      "Bash(echo:*)",
+      "Bash(head:*)",
+      "Bash(grep:*)",
+      "Bash(tinygo test:*)",
+      "Bash(tinygo build:*)",
+      "Bash(go mod tidy:*)",
+      "Bash(GOFLAGS=-mod=mod tinygo build:*)",
+      "Bash(make test:*)",
+      "Bash(make fmt:*)",
+      "Bash(go build:*)",
+      "Bash(go vet:*)",
+      "Bash(go fmt:*)",
+      "Bash(tinygo version:*)",
+      "Bash(GOFLAGS=-mod=mod go get:*)",
+      "Bash(make build-example:*)",
+      "Bash(ls:*)"
+    ]
+  }
+}
