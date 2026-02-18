@@ -40,6 +40,9 @@ temp/
 build/
 dist/
 
+# CLI binary
+keygoard
+
 # User-specific keyboard projects (in examples)
 examples/**/*.uf2
 examples/*/build/

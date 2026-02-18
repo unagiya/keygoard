@@ -27,7 +27,7 @@ func main() {
 		}
 
 	case "version":
-		fmt.Println("keygoard v0.1.0")
+		fmt.Printf("keygoard v%s\n", Version)
 
 	case "help":
 		printUsage()

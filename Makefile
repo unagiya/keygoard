@@ -1,4 +1,4 @@
-.PHONY: help install build build-pico build-pico2 build-example build-example-pico build-example-pico2 test fmt lint clean deps setup
+.PHONY: help install build build-pico build-pico2 build-example build-example-pico build-example-pico2 build-cli test fmt lint clean deps setup
 
 # デフォルトターゲット
 help:
@@ -6,6 +6,7 @@ help:
 	@echo ""
 	@echo "Usage:"
 	@echo "  make install               Install keygoard CLI tool (standard Go)"
+	@echo "  make build-cli             Cross-compile CLI for all platforms"
 	@echo "  make build                 Build all packages for both targets (TinyGo)"
 	@echo "  make build-pico            Build all packages for RP2040 (TinyGo)"
 	@echo "  make build-pico2           Build all packages for RP2350 (TinyGo)"
@@ -23,6 +24,22 @@ help:
 install:
 	@echo "Installing keygoard CLI..."
 	go install ./cmd/keygoard
+
+# CLIのクロスコンパイル（ローカル確認用）
+build-cli:
+	@echo "Cross-compiling keygoard CLI..."
+	@VERSION=$$(grep 'var Version' cmd/keygoard/version.go | sed 's/.*"\(.*\)".*/\1/'); \
+	LDFLAGS="-X main.Version=$${VERSION}"; \
+	mkdir -p dist; \
+	for platform in darwin/amd64 darwin/arm64 linux/amd64 linux/arm64 windows/amd64; do \
+		GOOS=$${platform%/*}; \
+		GOARCH=$${platform#*/}; \
+		output="dist/keygoard_v$${VERSION}_$${GOOS}_$${GOARCH}"; \
+		if [ "$${GOOS}" = "windows" ]; then output="$${output}.exe"; fi; \
+		echo "  Building $${GOOS}/$${GOARCH}..."; \
+		GOOS=$${GOOS} GOARCH=$${GOARCH} go build -ldflags "$${LDFLAGS}" -o "$${output}" ./cmd/keygoard || exit 1; \
+	done
+	@echo "Done. Binaries in dist/"
 
 # 全パッケージのビルド確認（両ターゲット）
 build: build-pico build-pico2

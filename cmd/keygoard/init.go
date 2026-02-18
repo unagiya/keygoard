@@ -47,8 +47,8 @@ func goModTemplate(name string) string {
 
 go 1.21
 
-require github.com/unagiya/keygoard v0.1.0
-`, name)
+require github.com/unagiya/keygoard v%s
+`, name, Version)
 }
 
 const mainGoTemplate = `package main
