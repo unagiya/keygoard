@@ -12,6 +12,8 @@ type Config struct {
 	I2C    *machine.I2C // I2C bus
 	Width  int16        // Display width (128)
 	Height int16        // Display height (32 or 64)
+	SDA    machine.Pin  // SDAピン（0=ボードデフォルトを使用）
+	SCL    machine.Pin  // SCLピン（0=ボードデフォルトを使用）
 }
 
 // Display wraps the SSD1306 display driver.
@@ -23,9 +25,11 @@ type Display struct {
 
 // New creates a new OLED display instance.
 func New(cfg *Config) (*Display, error) {
-	// Configure I2C
+	// Configure I2C（SDA/SCLが指定されている場合はそのピンを使用）
 	err := cfg.I2C.Configure(machine.I2CConfig{
 		Frequency: 400 * machine.KHz,
+		SDA:       cfg.SDA,
+		SCL:       cfg.SCL,
 	})
 	if err != nil {
 		return nil, err

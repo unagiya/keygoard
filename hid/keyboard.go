@@ -1,26 +1,71 @@
 package hid
 
 import (
+	"machine"
 	"machine/usb/hid"
 )
 
 // keyboardReportID はTinyGoのUSB HIDキーボードレポートIDを表す。
-const keyboardReportID = 0x02
+// TinyGoのHID記述子ではキーボードはレポートID 1 として登録される。
+const keyboardReportID = 0x01
 
 // KeyboardHID はUSBキーボードHID機能をラップする。
 type KeyboardHID struct {
-	report KeyboardReport
+	report  KeyboardReport
+	buf     *hid.RingBuffer
+	waitTxc bool
 }
 
-// NewKeyboardHID は新しいキーボードHIDインターフェースを作成する。
+// globalKeyboard はUSB HIDハンドラとして登録されるグローバルインスタンス。
+// hid.SetHandler に渡すためシングルトンにする。
+var globalKeyboard = &KeyboardHID{
+	buf: hid.NewRingBuffer(),
+}
+
+func init() {
+	// SetHandler がUSBエンドポイントを構成し、ホストがHIDデバイスとして認識するようになる。
+	// machine/usb/hid/keyboard パッケージは不要で、直接 hidDevicer を実装して登録する。
+	hid.SetHandler(globalKeyboard)
+}
+
+// TxHandler はUSB送信完了時に呼ばれるコールバック（hidDevicer インターフェース実装）。
+func (k *KeyboardHID) TxHandler() bool {
+	k.waitTxc = false
+	if b, ok := k.buf.Get(); ok {
+		k.waitTxc = true
+		hid.SendUSBPacket(b)
+		return true
+	}
+	return false
+}
+
+// RxHandler はUSB受信時に呼ばれるコールバック（hidDevicer インターフェース実装）。
+// キーボードLED状態の受信に利用可能だが、現在は未使用。
+func (k *KeyboardHID) RxHandler(b []byte) bool {
+	return false
+}
+
+// NewKeyboardHID はキーボードHIDインターフェースを返す。
+// USB HIDはシングルトンのため、グローバルインスタンスを返す。
 func NewKeyboardHID() *KeyboardHID {
-	return &KeyboardHID{}
+	return globalKeyboard
+}
+
+// tx はリングバッファ経由でUSBパケットを送信する。
+// USB初期化完了前の呼び出しは無視される。
+func (k *KeyboardHID) tx(b []byte) {
+	if machine.USBDev.InitEndpointComplete {
+		if k.waitTxc {
+			k.buf.Put(b)
+		} else {
+			k.waitTxc = true
+			hid.SendUSBPacket(b)
+		}
+	}
 }
 
 // SendReport は現在のキーボードレポートを送信する。
 func (k *KeyboardHID) SendReport() error {
-	// TinyGoのキーボードHIDレポート形式に合わせたパケットを構築
-	// [REPORT_ID, Modifier, Reserved, Key0, Key1, Key2, Key3, Key4, Key5]
 	var buf [9]byte
 	buf[0] = keyboardReportID
 	buf[1] = k.report.Modifier
@@ -31,16 +76,16 @@ func (k *KeyboardHID) SendReport() error {
 	buf[6] = k.report.Keys[3]
 	buf[7] = k.report.Keys[4]
 	buf[8] = k.report.Keys[5]
-	hid.SendUSBPacket(buf[:])
+	k.tx(buf[:])
 	return nil
 }
 
-// GetReport returns a pointer to the current keyboard report.
+// GetReport は現在のキーボードレポートへのポインタを返す。
 func (k *KeyboardHID) GetReport() *KeyboardReport {
 	return &k.report
 }
 
-// Clear clears the keyboard report.
+// Clear はキーボードレポートをクリアする。
 func (k *KeyboardHID) Clear() {
 	k.report.Clear()
 }

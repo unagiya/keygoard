@@ -110,6 +110,7 @@ keygoard/
 ### マイコン
 - RP2040（Raspberry Pi Pico）
 - RP2350
+- Waveshare RP2040-Zero
 
 ### マトリックス
 - 片側最大16x8（128キー）
@@ -137,6 +138,7 @@ keygoard/
 - `macro-test` - マクロ記録・再生
 - `combo-test` - コンボキー
 - `persistent-keymap` - Flashベースキーマップ永続化
+- `waveshare-rp2040-zero` - zero-kb02ボード（3×4マトリックス、エンコーダ、ジョイスティック、OLED）
 
 キーコードリファレンス、分割キーボード詳細設定、パフォーマンスチューニング、GPIO制約については[詳細ドキュメント](docs/README_ja.md)を参照してください。
 

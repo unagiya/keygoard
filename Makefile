@@ -1,4 +1,4 @@
-.PHONY: help install build build-pico build-pico2 build-example build-example-pico build-example-pico2 build-cli test fmt lint clean deps setup
+.PHONY: help install build build-pico build-pico2 build-waveshare-zero build-example build-example-pico build-example-pico2 build-example-waveshare-zero build-cli test fmt lint clean deps setup
 
 # デフォルトターゲット
 help:
@@ -7,12 +7,14 @@ help:
 	@echo "Usage:"
 	@echo "  make install               Install keygoard CLI tool (standard Go)"
 	@echo "  make build-cli             Cross-compile CLI for all platforms"
-	@echo "  make build                 Build all packages for both targets (TinyGo)"
-	@echo "  make build-pico            Build all packages for RP2040 (TinyGo)"
-	@echo "  make build-pico2           Build all packages for RP2350 (TinyGo)"
-	@echo "  make build-example         Build all examples for both targets (TinyGo)"
-	@echo "  make build-example-pico    Build all examples for RP2040 (TinyGo)"
-	@echo "  make build-example-pico2   Build all examples for RP2350 (TinyGo)"
+	@echo "  make build                          Build all packages for all targets (TinyGo)"
+	@echo "  make build-pico                     Build all packages for RP2040 (TinyGo)"
+	@echo "  make build-pico2                    Build all packages for RP2350 (TinyGo)"
+	@echo "  make build-waveshare-zero           Build all packages for Waveshare RP2040-Zero (TinyGo)"
+	@echo "  make build-example                  Build all examples for all targets (TinyGo)"
+	@echo "  make build-example-pico             Build all examples for RP2040 (TinyGo)"
+	@echo "  make build-example-pico2            Build all examples for RP2350 (TinyGo)"
+	@echo "  make build-example-waveshare-zero   Build all examples for Waveshare RP2040-Zero (TinyGo)"
 	@echo "  make test                  Run tests (TinyGo)"
 	@echo "  make fmt                   Format code"
 	@echo "  make lint                  Run linter"
@@ -41,8 +43,8 @@ build-cli:
 	done
 	@echo "Done. Binaries in dist/"
 
-# 全パッケージのビルド確認（両ターゲット）
-build: build-pico build-pico2
+# 全パッケージのビルド確認（全ターゲット）
+build: build-pico build-pico2 build-waveshare-zero
 
 # 全パッケージのビルド確認（RP2040向け）
 build-pico:
@@ -54,8 +56,13 @@ build-pico2:
 	@echo "Building all packages with TinyGo (target: pico2)..."
 	tinygo test -target=pico2 -run='^$$' ./...
 
-# サンプルのビルド（両ターゲット）
-build-example: build-example-pico build-example-pico2
+# 全パッケージのビルド確認（Waveshare RP2040-Zero向け）
+build-waveshare-zero:
+	@echo "Building all packages with TinyGo (target: waveshare-rp2040-zero)..."
+	tinygo test -target=waveshare-rp2040-zero -run='^$$' ./...
+
+# サンプルのビルド（全ターゲット）
+build-example: build-example-pico build-example-pico2 build-example-waveshare-zero
 
 # サンプルのビルド（RP2040向け、各exampleは独自のgo.modを持つ）
 build-example-pico:
@@ -97,6 +104,26 @@ build-example-pico2:
 	done
 	@echo "Done. Firmware files (pico2) created in each example directory."
 
+# サンプルのビルド（Waveshare RP2040-Zero向け）
+build-example-waveshare-zero:
+	@echo "Building examples for Waveshare RP2040-Zero (target: waveshare-rp2040-zero)..."
+	@for dir in examples/*/; do \
+		if [ -f "$$dir/main.go" ]; then \
+			name=$$(basename $$dir); \
+			echo "  Building $$name..."; \
+			(cd $$dir && tinygo build -target=waveshare-rp2040-zero -o firmware-waveshare-zero.uf2 .) || exit 1; \
+		elif ls $$dir/*/main.go >/dev/null 2>&1; then \
+			for subdir in $$dir/*/; do \
+				if [ -f "$$subdir/main.go" ]; then \
+					name=$$(basename $$dir)/$$(basename $$subdir); \
+					echo "  Building $$name..."; \
+					(cd $$subdir && tinygo build -target=waveshare-rp2040-zero -o firmware-waveshare-zero.uf2 .) || exit 1; \
+				fi; \
+			done; \
+		fi; \
+	done
+	@echo "Done. Firmware files (waveshare-zero) created in each example directory."
+
 # テスト実行（TinyGoを使用）
 test:
 	@echo "Running tests with TinyGo..."
@@ -129,6 +156,7 @@ clean:
 	@echo "Cleaning build artifacts..."
 	@find examples -name "firmware.uf2" -delete 2>/dev/null || true
 	@find examples -name "firmware-pico2.uf2" -delete 2>/dev/null || true
+	@find examples -name "firmware-waveshare-zero.uf2" -delete 2>/dev/null || true
 	rm -rf build/
 	go clean
 

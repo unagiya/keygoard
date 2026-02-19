@@ -108,6 +108,7 @@ keygoard/
 ### Microcontrollers
 - RP2040 (Raspberry Pi Pico)
 - RP2350
+- Waveshare RP2040-Zero
 
 ### Matrix
 - Up to 16x8 per side (128 keys)
@@ -135,6 +136,7 @@ See the `examples/` directory for complete working examples:
 - `macro-test` - Macro recording and playback
 - `combo-test` - Combo key combinations
 - `persistent-keymap` - Flash-based keymap persistence
+- `waveshare-rp2040-zero` - zero-kb02 board (3×4 matrix, encoder, joystick, OLED)
 
 For detailed keycode reference, split keyboard configuration, and performance tuning, see the [documentation](docs/README_ja.md).
 

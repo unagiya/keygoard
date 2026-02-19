@@ -585,6 +585,8 @@ func (kb *Keyboard) processKeys() {
 }
 
 // processKey processes a single key press.
+// 保持中のキーに対して呼ばれるため、レイヤー操作は処理しない。
+// レイヤー操作（MO/TG/TT/LT）は状態変化時（押下/離上）のみ processKeyWithTap で処理する。
 func (kb *Keyboard) processKey(layer uint8, row, col int) {
 	kc := kb.keymap.GetKey(layer, row, col)
 
@@ -597,6 +599,12 @@ func (kb *Keyboard) processKey(layer uint8, row, col int) {
 				break
 			}
 		}
+	}
+
+	// レイヤー操作は押下時のみ有効。保持中に毎サイクル再適用すると
+	// MO では moStack が際限なく増加し、TG では毎ms ON/OFF 反転する。
+	if kc.IsLayerOp() {
+		return
 	}
 
 	kb.processKeycode(kc)
@@ -613,6 +621,17 @@ func (kb *Keyboard) processKeyWithTap(layer uint8, row, col int, pressed bool) {
 			if kc != keycode.KC_TRNS {
 				break
 			}
+		}
+	}
+
+	// MOキーのリリース: タップ検出器より先にレイヤーを解除する。
+	// タップ検出器は TT/LT のみを管理し、MO(opType=0x00)のリリースは
+	// shouldSend=false を返すだけで DeactivateMO を呼ばない。
+	if !pressed && kc.IsLayerOp() {
+		opType, moLayer, ok := keycode.DecodeLayerOp(kc)
+		if ok && opType == 0x00 { // MO
+			kb.layerMgr.DeactivateMO(moLayer)
+			return
 		}
 	}
 
