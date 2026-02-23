@@ -4,31 +4,56 @@ package engine
 
 import (
 	"machine"
+	"machine/usb"
 	hidkb "machine/usb/hid/keyboard"
 	"time"
 
 	"github.com/unagiya/keygoard/matrix"
 )
 
+// defaultProductName はフレームワークのデフォルト USB Product Name です。
+const defaultProductName = "keygoard"
+
 // Keyboard はキーボードエンジンです。
 // マトリクススキャン・キーマップ参照・HID 送信を統合します。
 type Keyboard struct {
-	scanner   *matrix.Scanner
-	keymap    *Keymap
-	prevState [matrix.RowCount][matrix.ColCount]bool
+	scanner     *matrix.Scanner
+	keymap      *Keymap
+	productName string
+	prevState   [matrix.RowCount][matrix.ColCount]bool
 }
 
-// New は Keyboard を生成します。
-func New(scanner *matrix.Scanner, km *Keymap) *Keyboard {
+// New は Config からキーボードエンジンを生成します。
+func New(cfg *Config) *Keyboard {
+	name := cfg.ProductName
+	if name == "" {
+		name = defaultProductName
+	}
+
 	return &Keyboard{
-		scanner: scanner,
-		keymap:  km,
+		scanner:     cfg.Scanner,
+		keymap:      cfg.Keymap,
+		productName: name,
 	}
 }
 
-// Init はハードウェアを初期化します。
+// Run はキーボードを起動します。
+// ハードウェア初期化・USB エニュメレーション待機の後、スキャンループに入ります。
+// この関数は戻りません。
+func (kb *Keyboard) Run() {
+	usb.Product = kb.productName
+
+	kb.setup()
+
+	for {
+		kb.tick()
+		time.Sleep(1 * time.Millisecond)
+	}
+}
+
+// setup はハードウェアを初期化します。
 // USB エニュメレーション完了まで待機してからスキャンを開始できる状態にします。
-func (kb *Keyboard) Init() {
+func (kb *Keyboard) setup() {
 	kb.scanner.Init()
 
 	// USB エニュメレーション完了まで待機
@@ -37,9 +62,9 @@ func (kb *Keyboard) Init() {
 	time.Sleep(500 * time.Millisecond)
 }
 
-// Tick は 1 スキャンサイクルを実行します。メインループから毎回呼び出します。
+// tick は 1 スキャンサイクルを実行します。
 // キー状態に変化があった場合のみ HID レポートを送信します。
-func (kb *Keyboard) Tick() {
+func (kb *Keyboard) tick() {
 	state, changed := kb.scanner.Scan()
 	if !changed {
 		return
@@ -54,7 +79,6 @@ func (kb *Keyboard) Tick() {
 
 			kc := kb.keymap.Layer0[row][col]
 			if kc == 0 {
-				// キー未割り当て
 				continue
 			}
 
