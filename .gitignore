@@ -1,0 +1,15 @@
+# ビルド成果物
+*.uf2
+*.elf
+*.hex
+*.bin
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Go
+/vendor/

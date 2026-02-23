@@ -1,15 +1,14 @@
 TARGET   := waveshare-rp2040-zero
 EXAMPLE  := ./examples/zero-kb02/
 
-.PHONY: test test-native build flash fmt lint
+.PHONY: test build flash fmt lint
 
-# machine 非依存パッケージのテスト（標準 Go）
+# テスト
+# 1. 標準 Go: machine 非依存パッケージ（keycode, matrix/debounce）
+# 2. TinyGo:  RP2040 ターゲットで全パッケージのビルド検証（実機接続が必要）
 test:
-	go test ./keycode/...
-
-# TinyGo native ターゲットでのテスト（ホスト上で machine を含むパッケージも実行可）
-test-native:
-	tinygo test -target=native ./...
+	go test ./keycode/... ./matrix/...
+	tinygo test -target=$(TARGET) ./...
 
 # TinyGo でのビルド確認
 build:

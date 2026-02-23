@@ -89,13 +89,13 @@ v0.3.0  ← Phase 3 完了（実機確認・main マージ）
 
 ### 仕様書
 
-- `docs/` フォルダにコードに対する仕様書を日本語で記載する
-- パッケージごとに 1 ファイル（例: `docs/matrix.md`, `docs/hid.md`）
+- `docs/packages/` フォルダにコードに対する仕様書を日本語で記載する
+- パッケージごとに 1 ファイル（例: `docs/packages/matrix.md`, `docs/packages/hid.md`）
 - 仕様書はコード実装と同時に更新する（実装後に書かない）
 - Phase 完了時に対応するドキュメントが揃っていることを確認する
 
 ```
-docs/
+docs/packages/
 ├── matrix.md        ← マトリクススキャン・デバウンス仕様
 ├── hid.md           ← HID レポート仕様
 ├── keycode.md       ← キーコード定義仕様
@@ -167,8 +167,7 @@ engine/          ← 全体を統合する最上位層
 
 | コマンド | 内容 |
 |---|---|
-| `make test` | `machine` 非依存パッケージのテスト（標準 Go） |
-| `make test-native` | TinyGo native ターゲットでのテスト（ホスト上で `machine` を含むパッケージも実行可） |
+| `make test` | ① 標準 Go: `machine` 非依存パッケージ（keycode, matrix/debounce）<br>② TinyGo: RP2040 ターゲットで全パッケージのビルド検証（実機接続が必要） |
 | `make build` | TinyGo でのビルド確認（zero-kb02） |
 | `make flash` | RP2040 への書き込み |
 | `make fmt` | コードフォーマット（goimports） |
@@ -194,7 +193,7 @@ engine/          ← 全体を統合する最上位層
 4. **ハードウェア非依存ロジックにユニットテストがあるか** — keycode / debounce / layer
 5. **エラーを握りつぶしていないか**
 6. **グローバル変数の使用に理由があり、コメントがあるか**
-7. **対応する仕様書（docs/）が更新されているか**
+7. **対応する仕様書（docs/packages/）が更新されているか**
 
 ---
 
@@ -207,9 +206,8 @@ engine/          ← 全体を統合する最上位層
 
 | コマンド | 対象 | 備考 |
 |---|---|---|
-| `go test ./keycode/...` | `machine` 非依存パッケージ | 標準 Go で実行可能 |
-| `tinygo test -target=native ./...` | `machine` を含む全パッケージ | ホスト上で TinyGo ランタイムを使って実行 |
-| `tinygo test -target=waveshare-rp2040-zero ./...` | 実機テスト | 実機が必要 |
+| `go test ./keycode/... ./matrix/...` | `machine` 非依存パッケージ | 標準 Go で実行可能。`matrix.go` は `//go:build tinygo` タグで除外される |
+| `tinygo test -target=waveshare-rp2040-zero ./...` | 全パッケージ（実機テスト） | 実機接続が必要 |
 
 ### ユニットテスト対象
 
