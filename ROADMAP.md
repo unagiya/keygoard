@@ -1,75 +1,61 @@
-# keygoard ロードマップ
+# ROADMAP
 
-[English](#english) | [日本語](#日本語)
+各フェーズは「実機で動作確認済み・main にマージ済み」になって初めて完了とする。
+フェーズ完了時に `v0.N.0` タグを打つ。
 
-## 日本語
+## Phase 1（現在の目標）: 最小 HID キーボード
 
-### 現在のバージョン
+**ゴール: RP2040 が USB キーボードとして OS に認識され、キー入力が届く**
 
-**v0.1.0**（ベータ版開発完了）
+- [ ] マトリクススキャン（COL2ROW、zero-kb02 のピン配置で動作）
+- [ ] デバウンス処理
+- [ ] 基本 6KRO キーボード HID（TinyGo 標準の `machine/usb/hid` を使う）
+- [ ] レイヤー 0 のみのキーマップ（3×4 固定）
+- [ ] `tinygo build -target=waveshare-rp2040-zero` でビルド成功
+- [ ] macOS でキーボードとして認識されることを確認
+- [ ] 実際に文字が入力できることを確認
 
-全機能の実装が完了しています。各機能の詳細は [docs/](docs/README_ja.md) を参照してください。
-
----
-
-### 将来的な可能性
-
-これらは具体的な計画ではありませんが、将来検討する可能性がある機能です：
-
-- 🤔 Bluetooth LE対応（nRF52シリーズ）
-- 🤔 ディスプレイ強化（カラーOLED、E-Ink等）
-- 🤔 追加センサー（加速度、ジャイロ等）
-- 🤔 オーディオフィードバック（ブザー、スピーカー）
-- 🤔 ハプティックフィードバック
-- 🤔 他のマイコン対応（STM32、ESP32等）
-- 🤔 Web設定ツール（ブラウザベース）
+**Phase 1 スコープ外（追加しない）:**
+- Split / OLED / LED / Encoder / Joystick
+- 複数レイヤー / MO / TG / TT / LT / KC_TRNS
+- Gamepad / Composite HID
+- マクロ / コンボ / NKRO / Flash 永続化
 
 ---
 
-### 貢献方法
+## Phase 2: レイヤーシステム（Phase 1 完了後）
 
-機能実装に貢献したい場合：
-
-1. [CONTRIBUTING.md](CONTRIBUTING.md) を確認
-2. 関連するIssueを確認（またはIssueを作成）
-3. 実装したい機能について議論
-4. Pull Requestを作成
+- 複数レイヤー（MO / TG）
+- KC_TRNS（透過キー）
+- TT / LT（タップ検出）
 
 ---
 
-## English
+## Phase 3: 周辺機器（Phase 2 完了後）
 
-### Current Version
-
-**v0.1.0** (Beta development completed)
-
-All features have been implemented. See [docs/](docs/README_ja.md) for details on each feature.
+- ロータリーエンコーダー（GP3/GP4）
+- RGB LED WS2812（GP1、12 LED）
+- OLED SSD1306（GP12/GP13）
 
 ---
 
-### Future Possibilities
+## Phase 4: Joystick + Gamepad（Phase 3 完了後）
 
-These are not concrete plans, but features that may be considered in the future:
-
-- 🤔 Bluetooth LE support (nRF52 series)
-- 🤔 Display enhancements (color OLED, E-Ink, etc.)
-- 🤔 Additional sensors (accelerometer, gyroscope, etc.)
-- 🤔 Audio feedback (buzzer, speaker)
-- 🤔 Haptic feedback
-- 🤔 Other MCU support (STM32, ESP32, etc.)
-- 🤔 Web configuration tool (browser-based)
+- アナログジョイスティック（GP28/GP29）
+- Composite HID（キーボード＋ゲームパッド）← Composite はここまで遅らせる
 
 ---
 
-### Contributing
+## Phase 5: Split 対応（Phase 4 完了後）
 
-To contribute to feature implementation:
-
-1. Check [CONTRIBUTING.md](CONTRIBUTING.md)
-2. Review related Issues (or create one)
-3. Discuss feature implementation
-4. Create Pull Request
+- UART 双方向通信
+- マスター/スレーブ分離
 
 ---
 
-**Last updated**: 2026-02-18
+## Phase 6: 高度な機能（Phase 5 完了後）
+
+- マクロ / コンボ
+- Flash 永続化（キーマップ・設定）
+- NKRO
+- CLI ツール（`keygoard init`）
