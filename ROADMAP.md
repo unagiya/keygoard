@@ -7,13 +7,16 @@
 
 **ゴール: RP2040 が USB キーボードとして OS に認識され、キー入力が届く**
 
-- [ ] マトリクススキャン（COL2ROW、zero-kb02 のピン配置で動作）
-- [ ] デバウンス処理
-- [ ] 基本 6KRO キーボード HID（TinyGo 標準の `machine/usb/hid` を使う）
-- [ ] レイヤー 0 のみのキーマップ（3×4 固定）
-- [ ] `tinygo build -target=waveshare-rp2040-zero` でビルド成功
-- [ ] macOS でキーボードとして認識されることを確認
-- [ ] 実際に文字が入力できることを確認
+> コード実装は `feature/matrix-scan` ブランチで完了済み。
+> 残りは実機ビルド・動作確認のみ。
+
+- [x] マトリクススキャン（COL2ROW、zero-kb02 のピン配置で動作）
+- [x] デバウンス処理
+- [x] 基本 6KRO キーボード HID（TinyGo 標準の `machine/usb/hid` を使う）
+- [x] レイヤー 0 のみのキーマップ（3×4 固定）
+- [x] `tinygo build -target=waveshare-rp2040-zero` でビルド成功
+- [x] macOS でキーボードとして認識されることを確認
+- [x] 実際に文字が入力できることを確認
 
 **Phase 1 スコープ外（追加しない）:**
 - Split / OLED / LED / Encoder / Joystick

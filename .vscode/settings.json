@@ -1,0 +1,33 @@
+{
+  "go.toolsManagement.autoUpdate": true,
+  "go.useLanguageServer": true,
+  "go.lintTool": "golangci-lint",
+  "go.lintOnSave": "workspace",
+  "go.formatTool": "gofmt",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
+  "files.associations": {
+    "*.go": "go"
+  },
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/*.uf2": true,
+    "**/vendor": true
+  },
+  "search.exclude": {
+    "**/vendor": true,
+    "**/node_modules": true,
+    "**/*.uf2": true
+  },
+  "gopls": {
+    "build.directoryFilters": ["-examples"]
+  },
+  "[go]": {
+    "editor.defaultFormatter": "golang.go",
+    "editor.tabSize": 4,
+    "editor.insertSpaces": false
+  }
+}

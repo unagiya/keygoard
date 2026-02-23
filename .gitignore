@@ -1,0 +1,12 @@
+# ビルド成果物
+*.uf2
+*.elf
+*.hex
+*.bin
+
+# macOS
+.DS_Store
+
+# Go
+/vendor/
+go.work.sum

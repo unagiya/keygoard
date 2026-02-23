@@ -1,0 +1,84 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build: All packages",
+      "type": "shell",
+      "command": "go build ./...",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": ["$go"]
+    },
+    {
+      "label": "Build: Simple Gamepad Example (RP2040)",
+      "type": "shell",
+      "command": "tinygo build -target=pico -o firmware.uf2 .",
+      "options": {
+        "cwd": "${workspaceFolder}/examples/simple-gamepad"
+      },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Install: CLI Tool",
+      "type": "shell",
+      "command": "go install ./cmd/keygoard",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": ["$go"]
+    },
+    {
+      "label": "Test: Run all tests",
+      "type": "shell",
+      "command": "go test ./...",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": ["$go"]
+    },
+    {
+      "label": "Format: All files",
+      "type": "shell",
+      "command": "go fmt ./...",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Lint: Run linter",
+      "type": "shell",
+      "command": "golangci-lint run",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Clean: Build artifacts",
+      "type": "shell",
+      "command": "make clean",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    }
+  ]
+}
