@@ -2,12 +2,12 @@
 
 ## 完了条件
 
-- [ ] 全タスク完了
+- [x] 全タスク完了
 - [x] `tinygo build -target=waveshare-rp2040-zero` 成功
 - [x] `go test ./keycode/... ./matrix/...` 全パス
 - [x] macOS でキーボードデバイスとして認識される
 - [x] 実際にキー入力が届くことを実機確認
-- [ ] `v0.1.0` タグを `main` に打つ
+- [x] `v0.1.0` タグを `main` に打つ
 
 ---
 
@@ -88,7 +88,7 @@
 
 ## Phase 1 完了処理
 
-- [ ] `phase1` → `main` へ PR 作成・マージ
-- [ ] `main` に `v0.1.0` タグを打つ
+- [x] `feature/matrix-scan` → `main` へ PR 作成・マージ
+- [x] `main` に `v0.1.0` タグを打つ
 - [x] ROADMAP.md の Phase 1 チェックリストを全て完了にする
-- [ ] `.steering/phase1/tasklist.md` の完了条件を全てチェック
+- [x] `.steering/phase1/tasklist.md` の完了条件を全てチェック
