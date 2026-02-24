@@ -1,8 +1,6 @@
 package main
 
 import (
-	"time"
-
 	// keyboard パッケージの init() が HID ハンドラを登録するためインポートが必要
 	_ "machine/usb/hid/keyboard"
 
@@ -11,13 +9,10 @@ import (
 )
 
 func main() {
-	scanner := matrix.New(matrixCols, matrixRows)
-	kb := engine.New(scanner, defaultKeymap)
-	kb.Init()
-
-	for {
-		kb.Tick()
-		// fixme: スキャン間隔は実機計測後に最適値に調整する
-		time.Sleep(1 * time.Millisecond)
-	}
+	kb := engine.New(&engine.Config{
+		Scanner:     matrix.New(matrixCols, matrixRows),
+		Keymap:      defaultKeymap,
+		ProductName: "zero-kb02",
+	})
+	kb.Run()
 }
