@@ -21,6 +21,7 @@ type Keyboard struct {
 	keymap      *Keymap
 	productName string
 	prevState   [matrix.RowCount][matrix.ColCount]bool
+	resolver    *Resolver
 }
 
 // New は Config からキーボードエンジンを生成します。
@@ -34,6 +35,7 @@ func New(cfg *Config) *Keyboard {
 		scanner:     cfg.Scanner,
 		keymap:      cfg.Keymap,
 		productName: name,
+		resolver:    NewResolver(cfg.Keymap),
 	}
 }
 
@@ -77,7 +79,7 @@ func (kb *Keyboard) tick() {
 				continue
 			}
 
-			kc := kb.keymap.Layer0[row][col]
+			kc := kb.resolver.Resolve(row, col)
 			if kc == 0 {
 				continue
 			}

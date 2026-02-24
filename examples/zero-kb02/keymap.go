@@ -6,7 +6,7 @@ import (
 	"github.com/unagiya/keygoard/matrix"
 )
 
-// defaultKeymap は zero-kb02 レイヤー 0 のキー割り当てです（3 行 × 4 列）。
+// defaultKeymap は zero-kb02 のキーマップです（3 行 × 4 列）。
 //
 // 物理配列（zero-kb02 スイッチ位置）:
 //
@@ -14,11 +14,14 @@ import (
 //	Row 1: [A] [S] [D] [F]
 //	Row 2: [Z] [X] [C] [V]
 //
-// fixme: 実機確認後にキー割り当てを実用的な配列に変更する。
+// fixme: Phase 3 以降でレイヤー 1 以降を活用する。
 var defaultKeymap = &engine.Keymap{
-	Layer0: [matrix.RowCount][matrix.ColCount]keycode.Keycode{
-		{keycode.Q, keycode.W, keycode.E, keycode.R},
-		{keycode.A, keycode.S, keycode.D, keycode.F},
-		{keycode.Z, keycode.X, keycode.C, keycode.V},
+	Layers: [engine.MaxLayers][matrix.RowCount][matrix.ColCount]keycode.Keycode{
+		// Layer 0: ベースレイヤー
+		{
+			{keycode.Q, keycode.W, keycode.E, keycode.R},
+			{keycode.A, keycode.S, keycode.D, keycode.F},
+			{keycode.Z, keycode.X, keycode.C, keycode.V},
+		},
 	},
 }
