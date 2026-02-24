@@ -2,12 +2,12 @@
 
 ## 完了条件
 
-- [ ] 全タスク完了
-- [ ] `go test ./keycode/... ./matrix/...` 全パス
-- [ ] `tinygo build -target=waveshare-rp2040-zero` 成功
-- [ ] macOS でキーボードデバイスとして認識される
-- [ ] 設定した Product Name が OS に表示される
-- [ ] 実際にキー入力が届くことを実機確認
+- [x] 全タスク完了
+- [x] `go test ./keycode/... ./matrix/...` 全パス
+- [x] `tinygo build -target=waveshare-rp2040-zero` 成功
+- [x] macOS でキーボードデバイスとして認識される
+- [x] 設定した Product Name が OS に表示される
+- [x] 実際にキー入力が届くことを実機確認
 - [ ] `v0.2.0` タグを `main` に打つ
 
 ---
@@ -84,15 +84,15 @@
 
 ### 1. ドキュメント
 
-- [ ] `docs/packages/engine.md` を新規作成（engine パッケージ仕様書）
-- [ ] コミット（`docs: engine パッケージ仕様書を追加`）
+- [x] `docs/packages/engine.md` を新規作成（engine パッケージ仕様書）
+- [x] コミット（`docs: engine パッケージ仕様書を追加`）
 
 ### 2. ビルド・実機確認
 
-- [ ] `tinygo build -target=waveshare-rp2040-zero` 成功
-- [ ] 実機書き込みで macOS にキーボードデバイスとして認識される
-- [ ] 設定した Product Name（"zero-kb02"）が OS に表示される
-- [ ] キー入力が引き続き動作する
+- [x] `tinygo build -target=waveshare-rp2040-zero` 成功
+- [x] 実機書き込みで macOS にキーボードデバイスとして認識される
+- [x] 設定した Product Name（"zero-kb02"）が OS に表示される
+- [x] キー入力が引き続き動作する
 
 ---
 
@@ -100,8 +100,8 @@
 
 ### 1. ドキュメント更新
 
-- [ ] ROADMAP.md の Phase 2 チェックリストを全て完了にする
-- [ ] `.steering/phase2/tasklist.md` の完了条件を全てチェック
+- [x] ROADMAP.md の Phase 2 チェックリストを全て完了にする
+- [x] `.steering/phase2/tasklist.md` の完了条件を全てチェック
 - [ ] ドキュメント更新をコミット
 
 ### 2. マージ・タグ
