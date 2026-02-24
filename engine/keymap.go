@@ -5,11 +5,10 @@ import (
 	"github.com/unagiya/keygoard/matrix"
 )
 
-// Keymap はレイヤー 0 のキー割り当てを保持します。
-// Phase 1 では単一レイヤーのみ対応します。
-//
-// fixme: Phase 2 以降で複数レイヤー（MO/TG）に対応する。
+// Keymap は複数レイヤーのキー割り当てを保持します。
+// Layers[0] がベースレイヤーで、番号が大きいほど優先度が高くなります。
+// 未使用レイヤーはゼロ値（全キー None）のままにします。
 type Keymap struct {
-	// Layer0 はレイヤー 0 のキー割り当てです。[row][col] でインデックスします。
-	Layer0 [matrix.RowCount][matrix.ColCount]keycode.Keycode
+	// Layers はレイヤーごとのキー割り当てです。[layer][row][col] でインデックスします。
+	Layers [MaxLayers][matrix.RowCount][matrix.ColCount]keycode.Keycode
 }

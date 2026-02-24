@@ -1,3 +1,5 @@
+//go:build tinygo
+
 package engine
 
 import "github.com/unagiya/keygoard/matrix"

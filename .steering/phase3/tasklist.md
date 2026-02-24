@@ -41,8 +41,8 @@
 
 ### PR・マージ
 
-- [ ] `feature/layer-keycode` → `phase3` の PR 作成
-- [ ] PR マージ
+- [x] `feature/layer-keycode` → `phase3` の PR 作成
+- [x] PR マージ
 
 ---
 
@@ -50,9 +50,9 @@
 
 ### 実装
 
-- [ ] `engine/keymap.go` の `Keymap` 構造体を変更
+- [x] `engine/keymap.go` の `Keymap` 構造体を変更
   - `Layer0` フィールドを `Layers [MaxLayers][matrix.RowCount][matrix.ColCount]keycode.Keycode` に変更
-- [ ] `engine/layer.go` を新規作成（ビルドタグなし）
+- [x] `engine/layer.go` を新規作成（ビルドタグなし）
   - `MaxLayers` 定数
   - `Resolver` 構造体（`keymap *Keymap`, `active [MaxLayers]bool`）
   - `NewResolver(km *Keymap) *Resolver`
@@ -61,32 +61,32 @@
   - `Deactivate(layer int)`
   - `Toggle(layer int)`
   - `IsActive(layer int) bool`
-- [ ] `engine/keyboard.go` の `Keyboard` 構造体に `resolver` フィールドを追加
-- [ ] `engine/keyboard.go` の `New()` で `NewResolver` を呼び出す
-- [ ] `engine/keyboard.go` の `tick()` でキーコード解決を `resolver.Resolve()` 経由に変更
-- [ ] `examples/zero-kb02/keymap.go` を新 Keymap 構造体に対応
+- [x] `engine/keyboard.go` の `Keyboard` 構造体に `resolver` フィールドを追加
+- [x] `engine/keyboard.go` の `New()` で `NewResolver` を呼び出す
+- [x] `engine/keyboard.go` の `tick()` でキーコード解決を `resolver.Resolve()` 経由に変更
+- [x] `examples/zero-kb02/keymap.go` を新 Keymap 構造体に対応
 
 ### テスト
 
-- [ ] `engine/layer_test.go` を新規作成
+- [x] `engine/layer_test.go` を新規作成
   - 単一レイヤー解決テスト
   - 複数レイヤー解決テスト（上位レイヤー優先）
   - KC_TRNS 透過テスト（下位レイヤーにフォールバック）
   - 全レイヤー TRNS の場合 None を返すテスト
   - Activate / Deactivate / Toggle テスト
   - Layer 0 は Deactivate できないテスト
-- [ ] `go test ./engine/...` 全パス
-- [ ] `go test ./keycode/...` 全パス（既存テスト維持）
+- [x] `go test ./engine/...` 全パス
+- [x] `go test ./keycode/...` 全パス（既存テスト維持）
 
 ### ドキュメント
 
-- [ ] `docs/packages/engine.md` を更新（Keymap・Resolver を反映）
+- [x] `docs/packages/engine.md` を更新（Keymap・Resolver を反映）
 
 ### 検証
 
-- [ ] `make lint` パス
-- [ ] `make build` パス
-- [ ] 実機書き込み・動作確認（レイヤー 0 のみで Phase 2 同等の動作 — 回帰テスト）
+- [x] `make lint` パス
+- [x] `make build` パス
+- [x] 実機書き込み・動作確認（レイヤー 0 のみで Phase 2 同等の動作 — 回帰テスト）
 
 ### PR・マージ
 
