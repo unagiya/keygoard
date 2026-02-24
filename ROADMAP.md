@@ -26,7 +26,16 @@
 
 ---
 
-## Phase 2: レイヤーシステム（Phase 1 完了後）
+## Phase 2: フレームワーク API ブラッシュアップ（Phase 1 完了後）
+
+**ゴール: ファームウェア側の記述を最小化し、フレームワークらしい API を提供する**
+
+- [ ] `engine.Run()` 導入（メインループをエンジン内部に隠蔽）
+- [ ] USB Product Name のカスタマイズ対応
+
+---
+
+## Phase 3: レイヤーシステム（Phase 2 完了後）
 
 - 複数レイヤー（MO / TG）
 - KC_TRNS（透過キー）
@@ -34,7 +43,7 @@
 
 ---
 
-## Phase 3: 周辺機器（Phase 2 完了後）
+## Phase 4: 周辺機器（Phase 3 完了後）
 
 - ロータリーエンコーダー（GP3/GP4）
 - RGB LED WS2812（GP1、12 LED）
@@ -42,21 +51,21 @@
 
 ---
 
-## Phase 4: Joystick + Gamepad（Phase 3 完了後）
+## Phase 5: Joystick + Gamepad（Phase 4 完了後）
 
 - アナログジョイスティック（GP28/GP29）
 - Composite HID（キーボード＋ゲームパッド）← Composite はここまで遅らせる
 
 ---
 
-## Phase 5: Split 対応（Phase 4 完了後）
+## Phase 6: Split 対応（Phase 5 完了後）
 
 - UART 双方向通信
 - マスター/スレーブ分離
 
 ---
 
-## Phase 6: 高度な機能（Phase 5 完了後）
+## Phase 7: 高度な機能（Phase 6 完了後）
 
 - マクロ / コンボ
 - Flash 永続化（キーマップ・設定）
