@@ -8,6 +8,7 @@ import (
 	hidkb "machine/usb/hid/keyboard"
 	"time"
 
+	"github.com/unagiya/keygoard/keycode"
 	"github.com/unagiya/keygoard/matrix"
 )
 
@@ -15,12 +16,13 @@ import (
 const defaultProductName = "keygoard"
 
 // Keyboard はキーボードエンジンです。
-// マトリクススキャン・キーマップ参照・HID 送信を統合します。
+// マトリクススキャン・レイヤー解決・HID 送信を統合します。
 type Keyboard struct {
 	scanner     *matrix.Scanner
 	keymap      *Keymap
 	productName string
 	prevState   [matrix.RowCount][matrix.ColCount]bool
+	activeKeys  [matrix.RowCount][matrix.ColCount]keycode.Keycode
 	resolver    *Resolver
 }
 
@@ -79,22 +81,63 @@ func (kb *Keyboard) tick() {
 				continue
 			}
 
-			kc := kb.resolver.Resolve(row, col)
-			if kc == 0 {
-				continue
-			}
-
 			if curr {
-				if err := hidkb.Keyboard.Down(hidkb.Keycode(kc)); err != nil {
-					println("keygoard: Down error:", err.Error())
-				}
+				kc := kb.resolver.Resolve(row, col)
+				kb.handlePress(row, col, kc)
 			} else {
-				if err := hidkb.Keyboard.Up(hidkb.Keycode(kc)); err != nil {
-					println("keygoard: Up error:", err.Error())
-				}
+				kb.handleRelease(row, col)
 			}
 		}
 	}
 
 	kb.prevState = state
+}
+
+// handlePress はキー押下時の処理を行います。
+// レイヤーアクションキーはレイヤー状態を変更し、通常キーは HID レポートを送信します。
+func (kb *Keyboard) handlePress(row, col int, kc keycode.Keycode) {
+	switch {
+	case kc.IsMO():
+		kb.resolver.Activate(kc.Layer())
+		kb.activeKeys[row][col] = kc
+
+	case kc.IsTG():
+		kb.resolver.Toggle(kc.Layer())
+		kb.activeKeys[row][col] = kc
+
+	case kc == keycode.None:
+		// 何もしない
+
+	default:
+		// 通常キー・修飾キー
+		if err := hidkb.Keyboard.Down(hidkb.Keycode(kc)); err != nil {
+			println("keygoard: Down error:", err.Error())
+		}
+		kb.activeKeys[row][col] = kc
+	}
+}
+
+// handleRelease はキーリリース時の処理を行います。
+// 押下時に記録した activeKeys に基づいて適切な解除処理を行います。
+func (kb *Keyboard) handleRelease(row, col int) {
+	active := kb.activeKeys[row][col]
+	if active == keycode.None {
+		return
+	}
+
+	switch {
+	case active.IsMO():
+		kb.resolver.Deactivate(active.Layer())
+
+	case active.IsTG():
+		// TG はトグル済み。リリース時は何もしない
+
+	default:
+		// 通常キー・修飾キー
+		if err := hidkb.Keyboard.Up(hidkb.Keycode(active)); err != nil {
+			println("keygoard: Up error:", err.Error())
+		}
+	}
+
+	kb.activeKeys[row][col] = keycode.None
 }

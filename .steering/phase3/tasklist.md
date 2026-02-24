@@ -90,8 +90,8 @@
 
 ### PR・マージ
 
-- [ ] `feature/layer-resolve` → `phase3` の PR 作成
-- [ ] PR マージ
+- [x] `feature/layer-resolve` → `phase3` の PR 作成
+- [x] PR マージ
 
 ---
 
@@ -99,36 +99,36 @@
 
 ### 実装
 
-- [ ] `engine/keyboard.go` に `activeKeys [RowCount][ColCount]keycode.Keycode` フィールドを追加
-- [ ] `engine/keyboard.go` に `handlePress(row, col int, kc keycode.Keycode)` メソッドを追加
+- [x] `engine/keyboard.go` に `activeKeys [RowCount][ColCount]keycode.Keycode` フィールドを追加
+- [x] `engine/keyboard.go` に `handlePress(row, col int, kc keycode.Keycode)` メソッドを追加
   - MO(n): `resolver.Activate(n)` + activeKeys 記録
   - TG(n): `resolver.Toggle(n)` + activeKeys 記録
   - 通常キー/修飾キー: HID Down + activeKeys 記録
   - None: 何もしない
-- [ ] `engine/keyboard.go` に `handleRelease(row, col int)` メソッドを追加
+- [x] `engine/keyboard.go` に `handleRelease(row, col int)` メソッドを追加
   - MO(n): `resolver.Deactivate(n)` + activeKeys クリア
   - TG(n): 何もしない + activeKeys クリア
   - 通常キー/修飾キー: HID Up + activeKeys クリア
-- [ ] `engine/keyboard.go` の `tick()` を handlePress/handleRelease 呼び出しに書き換え
-- [ ] `examples/zero-kb02/keymap.go` に MO(1) を含むキーマップを設定
+- [x] `engine/keyboard.go` の `tick()` を handlePress/handleRelease 呼び出しに書き換え
+- [x] `examples/zero-kb02/keymap.go` に MO(1) を含むキーマップを設定
 
 ### テスト
 
-- [ ] `go test ./engine/...` 全パス
-- [ ] `go test ./keycode/...` 全パス
+- [x] `go test ./engine/...` 全パス
+- [x] `go test ./keycode/...` 全パス
 
 ### 検証
 
-- [ ] `make lint` パス
-- [ ] `make build` パス
-- [ ] 実機書き込み
-- [ ] MO キーの動作確認
+- [x] `make lint` パス
+- [x] `make build` パス
+- [x] 実機書き込み
+- [x] MO キーの動作確認
   - MO(1) ホールド中にレイヤー 1 のキーコードが送信される
   - MO(1) リリースでレイヤー 0 に戻る
-- [ ] TG キーの動作確認
+- [x] TG キーの動作確認
   - TG(1) でレイヤー 1 が有効になる
   - 再度 TG(1) でレイヤー 0 に戻る
-- [ ] KC_TRNS の動作確認
+- [x] KC_TRNS の動作確認
   - レイヤー 1 の TRNS キーがレイヤー 0 のキーコードを送信する
 
 ### PR・マージ

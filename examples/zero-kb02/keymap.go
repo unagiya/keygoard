@@ -8,20 +8,30 @@ import (
 
 // defaultKeymap は zero-kb02 のキーマップです（3 行 × 4 列）。
 //
-// 物理配列（zero-kb02 スイッチ位置）:
+// Layer 0（ベース）:
 //
 //	Row 0: [Q] [W] [E] [R]
 //	Row 1: [A] [S] [D] [F]
-//	Row 2: [Z] [X] [C] [V]
+//	Row 2: [Z] [X] [C] [MO(1)]
 //
-// fixme: Phase 3 以降でレイヤー 1 以降を活用する。
+// Layer 1（数字・記号）:
+//
+//	Row 0: [1]    [2]    [3]    [4]
+//	Row 1: [5]    [6]    [7]    [8]
+//	Row 2: [9]    [0]    [TRNS] [TRNS]
 var defaultKeymap = &engine.Keymap{
 	Layers: [engine.MaxLayers][matrix.RowCount][matrix.ColCount]keycode.Keycode{
 		// Layer 0: ベースレイヤー
 		{
 			{keycode.Q, keycode.W, keycode.E, keycode.R},
 			{keycode.A, keycode.S, keycode.D, keycode.F},
-			{keycode.Z, keycode.X, keycode.C, keycode.V},
+			{keycode.Z, keycode.X, keycode.C, keycode.MO(1)},
+		},
+		// Layer 1: 数字レイヤー（MO(1) ホールド中に有効）
+		{
+			{keycode.Num1, keycode.Num2, keycode.Num3, keycode.Num4},
+			{keycode.Num5, keycode.Num6, keycode.Num7, keycode.Num8},
+			{keycode.Num9, keycode.Num0, keycode.TRNS, keycode.TRNS},
 		},
 	},
 }
