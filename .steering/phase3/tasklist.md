@@ -133,8 +133,8 @@
 
 ### PR・マージ
 
-- [ ] `feature/mo-tg` → `phase3` の PR 作成
-- [ ] PR マージ
+- [x] `feature/mo-tg` → `phase3` の PR 作成
+- [x] PR マージ
 
 ---
 
@@ -142,7 +142,7 @@
 
 ### 実装
 
-- [ ] `engine/tap.go` を新規作成（ビルドタグなし）
+- [x] `engine/tap.go` を新規作成（ビルドタグなし）
   - `tapThreshold` 定数（200）
   - `tapPhase` 型（`tapIdle` / `tapPending` / `tapHolding`）
   - `TapDetector` 構造体
@@ -152,37 +152,37 @@
   - `CheckTimeout(row, col int) (timedOut bool, kc keycode.Keycode)`
   - `Phase(row, col int) tapPhase`
   - `Reset(row, col int)`
-- [ ] `engine/keyboard.go` に `tap TapDetector` フィールドを追加
-- [ ] `engine/keyboard.go` の `tick()` に tap.Advance() とタイムアウトチェックを追加
-- [ ] `handlePress` に LT/TT 分岐を追加
+- [x] `engine/keyboard.go` に `tap TapDetector` フィールドを追加
+- [x] `engine/keyboard.go` の `tick()` に tap.Advance() とタイムアウトチェックを追加
+- [x] `handlePress` に LT/TT 分岐を追加
   - `tap.Press(row, col, kc)` を呼び出す
-- [ ] `handleRelease` にタップ判定を追加
+- [x] `handleRelease` にタップ判定を追加
   - LT タップ: タップキーコードを Down → Up 送信
   - TT タップ: レイヤートグル
   - LT/TT ホールド解除: `resolver.Deactivate(n)`
-- [ ] `examples/zero-kb02/keymap.go` に LT を含むキーマップを設定（任意）
+- [x] `examples/zero-kb02/keymap.go` に LT を含むキーマップを設定（任意）
 
 ### テスト
 
-- [ ] `engine/tap_test.go` を新規作成
+- [x] `engine/tap_test.go` を新規作成
   - Press → Advance (< 閾値) → Release = タップ判定テスト
   - Press → Advance (>= 閾値) → CheckTimeout = ホールド判定テスト
   - Press → Release (即座) = タップ判定テスト
   - 複数キー同時の独立動作テスト
   - Reset テスト
-- [ ] `go test ./engine/...` 全パス
-- [ ] `go test ./keycode/...` 全パス
+- [x] `go test ./engine/...` 全パス
+- [x] `go test ./keycode/...` 全パス
 
 ### ドキュメント
 
-- [ ] `docs/packages/engine.md` を更新（TapDetector を反映）
+- [x] `docs/packages/engine.md` を更新（TapDetector を反映）
 
 ### 検証
 
-- [ ] `make lint` パス
-- [ ] `make build` パス
-- [ ] 実機書き込み
-- [ ] LT キーの動作確認
+- [x] `make lint` パス
+- [x] `make build` パス
+- [x] 実機書き込み
+- [x] LT キーの動作確認
   - 短押し（< 200ms）で通常キーが入力される
   - 長押し（>= 200ms）でレイヤーが有効になる
   - 長押し中に他キーを押すとそのレイヤーのキーコードが送信される
