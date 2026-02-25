@@ -193,15 +193,15 @@
 
 ### PR・マージ
 
-- [ ] `feature/tap-detect` → `phase3` の PR 作成
-- [ ] PR マージ
+- [x] `feature/tap-detect` → `phase3` の PR 作成
+- [x] PR マージ
 
 ---
 
 ## Phase 3 完了作業
 
-- [ ] `docs/functional-design.md` を更新（レイヤー解決のデータフロー追加）
-- [ ] `docs/repository-structure.md` を更新（新ファイル追記）
-- [ ] `ROADMAP.md` の Phase 3 チェックボックスを更新
+- [x] `docs/functional-design.md` を更新（レイヤー解決のデータフロー追加）
+- [x] `docs/repository-structure.md` を更新（新ファイル追記）
+- [x] `ROADMAP.md` の Phase 3 チェックボックスを更新
 - [ ] `phase3` → `main` の PR 作成・マージ
 - [ ] `v0.3.0` タグを作成

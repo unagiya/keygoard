@@ -170,26 +170,61 @@ type Debouncer struct {
 matrix.Scan()（内部でデバウンス処理）
     │ state [RowCount][ColCount]bool, changed bool
     ▼
-engine.Tick()
-    ├─ keymap.Layer0 参照 → keycode.Keycode
-    └─ hidkb.Keyboard.Down/Up 呼び出し
+engine.tick()
+    ├─ tap.Advance()          ← 全 pending キーのカウンタ++
+    ├─ タイムアウトチェック    ← pending → holding 遷移時にレイヤー有効化
+    ├─ resolver.Resolve()     ← 最上位アクティブレイヤーから走査
+    ├─ handlePress()          ← MO/TG/LT/TT/通常キー分岐
+    └─ handleRelease()        ← タップ判定 → activeKeys に基づく解除
     │
     ▼
 USB HID レポート → OS
 ```
 
-### キーマップ構造（Phase 1）
+### レイヤー解決
+
+```
+resolver.Resolve(row, col):
+  for layer = MaxLayers-1 downto 0:
+    if !active[layer]: continue
+    kc = Layers[layer][row][col]
+    if kc != TRNS: return kc
+  return None
+```
+
+- 最上位のアクティブレイヤーから下方向に走査
+- TRNS（透過キー）は下位レイヤーにフォールバック
+- すべて TRNS の場合は None を返す
+
+### タップ/ホールド判定
+
+```
+tapIdle ──[Press(LT/TT)]──→ tapPending ──[閾値超過(200ms)]──→ tapHolding
+  ▲                              │                                │
+  └──────[Release=タップ]────────┘                                │
+  └──────────────────────[Release=ホールド解除]───────────────────┘
+
+タップ時:
+  LT(n, kc): kc を Down → Up（即時送信）
+  TT(n):     レイヤー n をトグル
+
+ホールド時:
+  LT/TT:     レイヤー n を Activate（リリースで Deactivate）
+```
+
+### キーマップ構造
 
 ```go
-// レイヤー 0 のみの 3×4 固定配列
-var Layer0 = [RowCount][ColCount]Keycode{
-    {Q, W, E, R},
-    {A, S, D, F},
-    {Z, X, C, V},
+const MaxLayers = 4
+
+type Keymap struct {
+    Layers [MaxLayers][RowCount][ColCount]Keycode
 }
 ```
 
-Phase 2 以降はレイヤー配列を複数持ち、レイヤースタックで解決する。
+- `Layers[0]` がベースレイヤー（常に有効）
+- 番号が大きいほど優先度が高い
+- 未使用レイヤーはゼロ値（全キー None）のまま
 
 ---
 
@@ -349,8 +384,11 @@ func (kb *Keyboard) Tick()
 | 識別子 | 種別 | 説明 |
 |---|---|---|
 | `Keyboard` | 構造体 | キーボードエンジン本体 |
-| `Keymap` | 構造体 | レイヤー 0 キーマップ（`Layer0 [RowCount][ColCount]keycode.Keycode`） |
-| `New(scanner, keymap)` | コンストラクタ | Keyboard を生成して返す |
-| `(*Keyboard).Init()` | メソッド | GPIO 初期化・USB エニュメレーション待機 |
-| `(*Keyboard).Tick()` | メソッド | 1 スキャンサイクル実行（変化時のみ HID 送信） |
+| `Keymap` | 構造体 | 複数レイヤーキーマップ（`Layers [MaxLayers][RowCount][ColCount]Keycode`） |
+| `MaxLayers` | 定数 | 最大レイヤー数（4） |
+| `Resolver` | 構造体 | レイヤー解決（最上位アクティブレイヤーから走査） |
+| `TapDetector` | 構造体 | タップ/ホールド判定（LT/TT キー用） |
+| `Config` | 構造体 | エンジン設定（Scanner, Keymap, ProductName） |
+| `New(cfg)` | コンストラクタ | Config から Keyboard を生成して返す |
+| `(*Keyboard).Run()` | メソッド | キーボード起動（初期化 + 無限ループ、戻らない） |
 | `ErrKeyOverflow` | エラー | 6KRO 上限超過（7 キー以上同時押し） |

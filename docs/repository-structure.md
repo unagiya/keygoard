@@ -17,7 +17,12 @@ keygoard/
 │
 ├── engine/                      ← 全体統合層（最上位パッケージ）
 │   ├── keyboard.go              ← メインループ・HID 送信（//go:build tinygo）
+│   ├── config.go                ← Config 構造体（//go:build tinygo）
 │   ├── keymap.go                ← キーマップ構造体
+│   ├── layer.go                 ← Resolver（レイヤー解決ロジック）
+│   ├── layer_test.go            ← Resolver ユニットテスト
+│   ├── tap.go                   ← TapDetector（タップ/ホールド判定）
+│   ├── tap_test.go              ← TapDetector ユニットテスト
 │   └── errors.go                ← エラー定義
 │
 ├── matrix/                      ← マトリクススキャン・デバウンス
@@ -43,14 +48,23 @@ keygoard/
 │   ├── architecture.md          ← 技術仕様（スタック・制約・パフォーマンス）
 │   ├── repository-structure.md  ← 本ファイル
 │   └── packages/                ← パッケージ実装レベル仕様
+│       ├── engine.md
 │       ├── keycode.md
 │       └── matrix.md
 │
 └── .steering/                   ← 作業単位ドキュメント（スペック駆動開発）
-    └── phase1/                  ← Phase 1 作業ドキュメント
-        ├── requirements.md      ← 要求仕様
-        ├── design.md            ← 設計
-        └── tasklist.md          ← タスクリスト・進捗
+    ├── phase1/                  ← Phase 1 作業ドキュメント
+    │   ├── requirements.md
+    │   ├── design.md
+    │   └── tasklist.md
+    ├── phase2/                  ← Phase 2 作業ドキュメント
+    │   ├── requirements.md
+    │   ├── design.md
+    │   └── tasklist.md
+    └── phase3/                  ← Phase 3 作業ドキュメント
+        ├── requirements.md
+        ├── design.md
+        └── tasklist.md
 ```
 
 ### 将来の構成（Phase 3 以降）
@@ -129,8 +143,8 @@ keygoard/
 
 | タグ | 対象ファイル例 |
 |---|---|
-| `//go:build tinygo` | `matrix/matrix.go`, `engine/keyboard.go` |
-| タグなし | `matrix/debounce.go`, `keycode/keycode.go`, `matrix/const.go` |
+| `//go:build tinygo` | `matrix/matrix.go`, `engine/keyboard.go`, `engine/config.go` |
+| タグなし | `matrix/debounce.go`, `keycode/keycode.go`, `matrix/const.go`, `engine/layer.go`, `engine/tap.go`, `engine/keymap.go` |
 | タグなし（`examples/` のみ） | `examples/zero-kb02/config.go`, `examples/zero-kb02/main.go` |
 
 **テストファイル**
