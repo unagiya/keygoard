@@ -8,6 +8,7 @@ import (
 	hidkb "machine/usb/hid/keyboard"
 	"time"
 
+	"github.com/unagiya/keygoard/keycode"
 	"github.com/unagiya/keygoard/matrix"
 )
 
@@ -15,12 +16,15 @@ import (
 const defaultProductName = "keygoard"
 
 // Keyboard はキーボードエンジンです。
-// マトリクススキャン・キーマップ参照・HID 送信を統合します。
+// マトリクススキャン・レイヤー解決・HID 送信を統合します。
 type Keyboard struct {
 	scanner     *matrix.Scanner
 	keymap      *Keymap
 	productName string
 	prevState   [matrix.RowCount][matrix.ColCount]bool
+	activeKeys  [matrix.RowCount][matrix.ColCount]keycode.Keycode
+	resolver    *Resolver
+	tap         TapDetector
 }
 
 // New は Config からキーボードエンジンを生成します。
@@ -34,6 +38,7 @@ func New(cfg *Config) *Keyboard {
 		scanner:     cfg.Scanner,
 		keymap:      cfg.Keymap,
 		productName: name,
+		resolver:    NewResolver(cfg.Keymap),
 	}
 }
 
@@ -63,8 +68,22 @@ func (kb *Keyboard) setup() {
 }
 
 // tick は 1 スキャンサイクルを実行します。
+// タップ検出のカウンタ更新・タイムアウトチェックを行った後、
 // キー状態に変化があった場合のみ HID レポートを送信します。
 func (kb *Keyboard) tick() {
+	// タップカウンタをインクリメント
+	kb.tap.Advance()
+
+	// タイムアウトチェック: pending → holding に遷移したらレイヤーを有効化
+	for row := 0; row < matrix.RowCount; row++ {
+		for col := 0; col < matrix.ColCount; col++ {
+			if timedOut, kc := kb.tap.CheckTimeout(row, col); timedOut {
+				kb.resolver.Activate(kc.Layer())
+				kb.activeKeys[row][col] = kc
+			}
+		}
+	}
+
 	state, changed := kb.scanner.Scan()
 	if !changed {
 		return
@@ -77,22 +96,92 @@ func (kb *Keyboard) tick() {
 				continue
 			}
 
-			kc := kb.keymap.Layer0[row][col]
-			if kc == 0 {
-				continue
-			}
-
 			if curr {
-				if err := hidkb.Keyboard.Down(hidkb.Keycode(kc)); err != nil {
-					println("keygoard: Down error:", err.Error())
-				}
+				kc := kb.resolver.Resolve(row, col)
+				kb.handlePress(row, col, kc)
 			} else {
-				if err := hidkb.Keyboard.Up(hidkb.Keycode(kc)); err != nil {
-					println("keygoard: Up error:", err.Error())
-				}
+				kb.handleRelease(row, col)
 			}
 		}
 	}
 
 	kb.prevState = state
+}
+
+// handlePress はキー押下時の処理を行います。
+// レイヤーアクションキーはレイヤー状態を変更し、通常キーは HID レポートを送信します。
+// LT/TT キーはタップ検出に委ねます。
+func (kb *Keyboard) handlePress(row, col int, kc keycode.Keycode) {
+	switch {
+	case kc.IsMO():
+		kb.resolver.Activate(kc.Layer())
+		kb.activeKeys[row][col] = kc
+
+	case kc.IsTG():
+		kb.resolver.Toggle(kc.Layer())
+		kb.activeKeys[row][col] = kc
+
+	case kc.IsLT(), kc.IsTT():
+		// タップ/ホールド判定待ち（activeKeys はタイムアウト時に設定）
+		kb.tap.Press(row, col, kc)
+
+	case kc == keycode.None:
+		// 何もしない
+
+	default:
+		// 通常キー・修飾キー
+		if err := hidkb.Keyboard.Down(hidkb.Keycode(kc)); err != nil {
+			println("keygoard: Down error:", err.Error())
+		}
+		kb.activeKeys[row][col] = kc
+	}
+}
+
+// handleRelease はキーリリース時の処理を行います。
+// タップ検出中のキーはタップ判定を行い、それ以外は activeKeys に基づいて解除処理を行います。
+func (kb *Keyboard) handleRelease(row, col int) {
+	// タップ判定チェック
+	if wasPending, kc := kb.tap.Release(row, col); wasPending {
+		switch {
+		case kc.IsLT():
+			// LT タップ: タップキーコードを Down → Up（即時送信）
+			tapKc := kc.TapKeycode()
+			if err := hidkb.Keyboard.Down(hidkb.Keycode(tapKc)); err != nil {
+				println("keygoard: Down error:", err.Error())
+			}
+			if err := hidkb.Keyboard.Up(hidkb.Keycode(tapKc)); err != nil {
+				println("keygoard: Up error:", err.Error())
+			}
+		case kc.IsTT():
+			// TT タップ: レイヤートグル
+			kb.resolver.Toggle(kc.Layer())
+		}
+		kb.activeKeys[row][col] = keycode.None
+		return
+	}
+
+	active := kb.activeKeys[row][col]
+	if active == keycode.None {
+		return
+	}
+
+	switch {
+	case active.IsMO():
+		kb.resolver.Deactivate(active.Layer())
+
+	case active.IsLT(), active.IsTT():
+		// ホールド中だった LT/TT のリリース: レイヤーを無効化
+		kb.resolver.Deactivate(active.Layer())
+
+	case active.IsTG():
+		// TG はトグル済み。リリース時は何もしない
+
+	default:
+		// 通常キー・修飾キー
+		if err := hidkb.Keyboard.Up(hidkb.Keycode(active)); err != nil {
+			println("keygoard: Up error:", err.Error())
+		}
+	}
+
+	kb.activeKeys[row][col] = keycode.None
 }

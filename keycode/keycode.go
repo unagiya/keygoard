@@ -9,6 +9,11 @@ package keycode
 // エンコーディング:
 //
 //	0x0000        : 無効（キー未割り当て）
+//	0x0001        : 透過（下位レイヤー参照）
+//	0xA000-0xA00F : MO(layer) — Momentary レイヤー
+//	0xA010-0xA01F : TG(layer) — Toggle レイヤー
+//	0xA020-0xA02F : TT(layer) — Tap-Toggle レイヤー
+//	0xB000-0xBFFF : LT(layer, kc) — Layer-Tap（上位ニブル=レイヤー, 下位バイト=Usage ID）
 //	0xE000-0xE0FF : 修飾キー（左右 Ctrl/Shift/Alt/GUI）
 //	0xF000-0xFFFF : 通常キー（HID Usage Page 7）
 type Keycode uint16
@@ -111,3 +116,98 @@ const (
 	DownArrow  Keycode = 81 | 0xF000
 	UpArrow    Keycode = 82 | 0xF000
 )
+
+// --- レイヤーアクション ---
+
+// TRNS は透過キーを表します。
+// レイヤー上で TRNS が割り当てられたキーは、下位レイヤーのキーコードを参照します。
+const TRNS Keycode = 0x0001
+
+// レイヤーアクションのプレフィックス
+const (
+	prefixMO Keycode = 0xA000
+	prefixTG Keycode = 0xA010
+	prefixTT Keycode = 0xA020
+	prefixLT Keycode = 0xB000
+)
+
+// MO は Momentary レイヤーキーコードを生成します。
+// ホールド中のみ指定レイヤーを有効にします。
+func MO(layer uint8) Keycode {
+	return prefixMO | Keycode(layer)
+}
+
+// TG は Toggle レイヤーキーコードを生成します。
+// 押下のたびにレイヤーを ON/OFF トグルします。
+func TG(layer uint8) Keycode {
+	return prefixTG | Keycode(layer)
+}
+
+// TT は Tap-Toggle レイヤーキーコードを生成します。
+// タップでレイヤーをトグルし、ホールドで MO として動作します。
+func TT(layer uint8) Keycode {
+	return prefixTT | Keycode(layer)
+}
+
+// LT は Layer-Tap キーコードを生成します。
+// タップで通常キーコードを送信し、ホールドでレイヤーを有効にします。
+// kc には通常キー（0xF0xx）を指定します。下位 8 ビット（HID Usage ID）のみ保持されます。
+func LT(layer uint8, kc Keycode) Keycode {
+	return prefixLT | Keycode(layer)<<8 | (kc & 0x00FF)
+}
+
+// --- レイヤーアクション判定 ---
+
+// IsMO は Momentary レイヤーキーコードかどうかを返します。
+func (kc Keycode) IsMO() bool {
+	return kc&0xFFF0 == prefixMO
+}
+
+// IsTG は Toggle レイヤーキーコードかどうかを返します。
+func (kc Keycode) IsTG() bool {
+	return kc&0xFFF0 == prefixTG
+}
+
+// IsTT は Tap-Toggle レイヤーキーコードかどうかを返します。
+func (kc Keycode) IsTT() bool {
+	return kc&0xFFF0 == prefixTT
+}
+
+// IsLT は Layer-Tap キーコードかどうかを返します。
+func (kc Keycode) IsLT() bool {
+	return kc&0xF000 == prefixLT
+}
+
+// IsLayerAction はレイヤー操作キーコード（MO/TG/TT/LT）かどうかを返します。
+func (kc Keycode) IsLayerAction() bool {
+	return kc.IsMO() || kc.IsTG() || kc.IsTT() || kc.IsLT()
+}
+
+// IsTapAction はタップ検出が必要なキーコード（TT/LT）かどうかを返します。
+func (kc Keycode) IsTapAction() bool {
+	return kc.IsTT() || kc.IsLT()
+}
+
+// --- レイヤーアクション情報抽出 ---
+
+// Layer はレイヤー操作キーコードからレイヤー番号を抽出します。
+// レイヤー操作キーコード以外で呼び出した場合の結果は未定義です。
+func (kc Keycode) Layer() int {
+	if kc.IsLT() {
+		return int((kc >> 8) & 0x0F)
+	}
+	return int(kc & 0x000F)
+}
+
+// TapKeycode は LT キーコードからタップ時のキーコードを抽出します。
+// LT 以外で呼び出した場合は None を返します。
+func (kc Keycode) TapKeycode() Keycode {
+	if !kc.IsLT() {
+		return None
+	}
+	usage := kc & 0x00FF
+	if usage == 0 {
+		return None
+	}
+	return usage | 0xF000
+}

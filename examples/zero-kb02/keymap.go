@@ -6,19 +6,36 @@ import (
 	"github.com/unagiya/keygoard/matrix"
 )
 
-// defaultKeymap は zero-kb02 レイヤー 0 のキー割り当てです（3 行 × 4 列）。
+// defaultKeymap は zero-kb02 のキーマップです（3 行 × 4 列）。
 //
-// 物理配列（zero-kb02 スイッチ位置）:
+// Layer 0（ベース）:
 //
-//	Row 0: [Q] [W] [E] [R]
-//	Row 1: [A] [S] [D] [F]
-//	Row 2: [Z] [X] [C] [V]
+//	Row 0: [Q]      [W] [E] [R]
+//	Row 1: [A]      [S] [D] [F]
+//	Row 2: [LT(1,Z)] [X] [C] [MO(1)]
 //
-// fixme: 実機確認後にキー割り当てを実用的な配列に変更する。
+// Layer 1（数字・記号）:
+//
+//	Row 0: [1]    [2]    [3]    [4]
+//	Row 1: [5]    [6]    [7]    [8]
+//	Row 2: [9]    [0]    [TRNS] [TRNS]
+//
+// LT(1, Z) の動作:
+//   - 短押し（< 200ms）: Z を入力
+//   - 長押し（>= 200ms）: レイヤー 1 を有効化（ホールド中のみ）
 var defaultKeymap = &engine.Keymap{
-	Layer0: [matrix.RowCount][matrix.ColCount]keycode.Keycode{
-		{keycode.Q, keycode.W, keycode.E, keycode.R},
-		{keycode.A, keycode.S, keycode.D, keycode.F},
-		{keycode.Z, keycode.X, keycode.C, keycode.V},
+	Layers: [engine.MaxLayers][matrix.RowCount][matrix.ColCount]keycode.Keycode{
+		// Layer 0: ベースレイヤー
+		{
+			{keycode.Q, keycode.W, keycode.E, keycode.R},
+			{keycode.A, keycode.S, keycode.D, keycode.F},
+			{keycode.LT(1, keycode.Z), keycode.X, keycode.C, keycode.MO(1)},
+		},
+		// Layer 1: 数字レイヤー（MO(1) ホールド中 / LT(1,Z) ホールド中に有効）
+		{
+			{keycode.Num1, keycode.Num2, keycode.Num3, keycode.Num4},
+			{keycode.Num5, keycode.Num6, keycode.Num7, keycode.Num8},
+			{keycode.Num9, keycode.Num0, keycode.TRNS, keycode.TRNS},
+		},
 	},
 }
