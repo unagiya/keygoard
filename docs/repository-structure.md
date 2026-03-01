@@ -13,17 +13,30 @@ keygoard/
 ├── ROADMAP.md                   ← フェーズ計画・完了状況
 ├── Makefile                     ← ビルド・テスト・フラッシュコマンド
 ├── go.mod                       ← Go モジュール定義（フレームワーク本体）
+├── go.sum                       ← Go 依存ハッシュ
 ├── go.work                      ← Go ワークスペース定義（ローカル開発用）
 │
 ├── engine/                      ← 全体統合層（最上位パッケージ）
 │   ├── keyboard.go              ← メインループ・HID 送信（//go:build tinygo）
 │   ├── config.go                ← Config 構造体（//go:build tinygo）
+│   ├── peripheral.go            ← Peripheral インターフェース定義
 │   ├── keymap.go                ← キーマップ構造体
 │   ├── layer.go                 ← Resolver（レイヤー解決ロジック）
 │   ├── layer_test.go            ← Resolver ユニットテスト
 │   ├── tap.go                   ← TapDetector（タップ/ホールド判定）
 │   ├── tap_test.go              ← TapDetector ユニットテスト
-│   └── errors.go                ← エラー定義
+│   ├── errors.go                ← エラー定義
+│   └── peripheral/              ← 周辺機器ドライバ群
+│       ├── encoder/             ← ロータリーエンコーダー
+│       │   ├── quadrature.go    ← クワドラチャデコーダ（machine 非依存）
+│       │   ├── quadrature_test.go ← ユニットテスト
+│       │   └── encoder.go       ← GPIO 読み取り（//go:build tinygo）
+│       ├── led/                 ← RGB LED（WS2812/SK6812）
+│       │   └── led.go           ← LED 制御（//go:build tinygo）
+│       └── oled/                ← OLED ディスプレイ（SSD1306）
+│           ├── font.go          ← 8x8 ビットマップフォント定義
+│           ├── font_test.go     ← ユニットテスト
+│           └── oled.go          ← SSD1306 I2C 制御（//go:build tinygo）
 │
 ├── matrix/                      ← マトリクススキャン・デバウンス
 │   ├── const.go                 ← マトリクスサイズ定数
@@ -47,10 +60,15 @@ keygoard/
 │   ├── functional-design.md     ← 機能設計（システム構成図・API）
 │   ├── architecture.md          ← 技術仕様（スタック・制約・パフォーマンス）
 │   ├── repository-structure.md  ← 本ファイル
+│   ├── glossary.md              ← ユビキタス言語定義
+│   ├── development-guidelines.md ← 開発ガイドライン
 │   └── packages/                ← パッケージ実装レベル仕様
 │       ├── engine.md
 │       ├── keycode.md
-│       └── matrix.md
+│       ├── matrix.md
+│       ├── encoder.md
+│       ├── led.md
+│       └── oled.md
 │
 └── .steering/                   ← 作業単位ドキュメント（スペック駆動開発）
     ├── phase1/                  ← Phase 1 作業ドキュメント
@@ -61,38 +79,31 @@ keygoard/
     │   ├── requirements.md
     │   ├── design.md
     │   └── tasklist.md
-    └── phase3/                  ← Phase 3 作業ドキュメント
+    ├── phase3/                  ← Phase 3 作業ドキュメント
+    │   ├── requirements.md
+    │   ├── design.md
+    │   └── tasklist.md
+    └── phase4/                  ← Phase 4 作業ドキュメント
         ├── requirements.md
         ├── design.md
         └── tasklist.md
 ```
 
-### 将来の構成（Phase 3 以降）
+### 将来の構成（Phase 5 以降）
 
 ```
 keygoard/
 ├── ...（上記と同様）
 │
 ├── engine/
-│   └── peripheral/              ← 周辺機器インターフェース（Phase 3 で追加）
-│       ├── encoder/             ← ロータリーエンコーダー（GP3/GP4）
-│       ├── led/                 ← RGB LED WS2812（GP1、12個）
-│       ├── oled/                ← OLED SSD1306（GP12/GP13）
-│       └── joystick/            ← アナログジョイスティック（Phase 4）
-│
-├── examples/
-│   └── zero-kb02/
-│       └── ...
+│   └── peripheral/
+│       ├── ...（上記と同様）
+│       └── joystick/            ← アナログジョイスティック（Phase 5）
 │
 └── docs/packages/               ← フェーズ進行に伴い追加
-    ├── hid.md                   ← Phase 1
-    ├── layer.md                 ← Phase 2
-    ├── encoder.md               ← Phase 3
-    ├── led.md                   ← Phase 3
-    ├── oled.md                  ← Phase 3
-    ├── joystick.md              ← Phase 4
-    ├── split.md                 ← Phase 5
-    └── storage.md               ← Phase 6
+    ├── joystick.md              ← Phase 5
+    ├── split.md                 ← Phase 6
+    └── storage.md               ← Phase 7 以降
 ```
 
 ---
@@ -143,8 +154,8 @@ keygoard/
 
 | タグ | 対象ファイル例 |
 |---|---|
-| `//go:build tinygo` | `matrix/matrix.go`, `engine/keyboard.go`, `engine/config.go` |
-| タグなし | `matrix/debounce.go`, `keycode/keycode.go`, `matrix/const.go`, `engine/layer.go`, `engine/tap.go`, `engine/keymap.go` |
+| `//go:build tinygo` | `matrix/matrix.go`, `engine/keyboard.go`, `engine/config.go`, `engine/peripheral/encoder/encoder.go`, `engine/peripheral/led/led.go`, `engine/peripheral/oled/oled.go` |
+| タグなし | `matrix/debounce.go`, `keycode/keycode.go`, `matrix/const.go`, `engine/layer.go`, `engine/tap.go`, `engine/keymap.go`, `engine/peripheral.go`, `engine/peripheral/encoder/quadrature.go`, `engine/peripheral/oled/font.go` |
 | タグなし（`examples/` のみ） | `examples/zero-kb02/config.go`, `examples/zero-kb02/main.go` |
 
 **テストファイル**

@@ -45,9 +45,10 @@
 
 ## Phase 4: 周辺機器（Phase 3 完了後）
 
-- ロータリーエンコーダー（GP3/GP4）
-- RGB LED WS2812（GP1、12 LED）
-- OLED SSD1306（GP12/GP13）
+- [x] Peripheral インターフェース定義・engine 統合
+- [x] ロータリーエンコーダー（GP3/GP4）
+- [x] RGB LED WS2812/SK6812（GP1、12 LED）
+- [x] OLED SSD1306（GP12/GP13、ソフトウェア回転対応）
 
 ---
 

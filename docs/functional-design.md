@@ -18,23 +18,25 @@
                  │ 呼び出し
 ┌────────────────▼────────────────────────────┐
 │  engine/                                    │
-│  メインループ（スキャン → 解決 → HID 送信）  │
-└──────┬─────────────────────────┬────────────┘
-       │                         │
-┌──────▼──────┐          ┌───────▼──────┐
-│  matrix/    │          │  keycode/    │
-│  スキャン   │          │  定数定義    │
-│  デバウンス │          └──────────────┘
-└──────┬──────┘
-       │        ※ engine/ も machine に直接依存（USB HID）
-┌──────▼──────────────────────────────────────┐
-│  machine（TinyGo 標準ライブラリ）           │
-│  GPIO / USB HID                             │
+│  メインループ（スキャン → 解決 → HID 送信） │
+│  Peripheral インターフェースで周辺機器を統合 │
+└──┬──────────┬──────────────┬────────────────┘
+   │          │              │
+┌──▼────┐ ┌──▼────────┐ ┌───▼──────────────┐
+│matrix/│ │ keycode/  │ │ peripheral/      │
+│スキャン│ │ 定数定義  │ │ ├ encoder/       │
+│デバウンス│ └──────────┘ │ ├ led/           │
+└──┬────┘              │ └ oled/           │
+   │                   └──────────┬────────┘
+   │    ※ engine/ も machine に直接依存（USB HID）
+┌──▼──────────────────────────────▼───────────┐
+│  machine + tinygo.org/x/drivers             │
+│  GPIO / USB HID / WS2812 / SSD1306 / I2C   │
 └─────────────────────────────────────────────┘
        │
 ┌──────▼──────────────────────────────────────┐
 │  RP2040 ハードウェア（zero-kb02）            │
-│  マトリクス GPIO / USB                      │
+│  マトリクス GPIO / USB / LED / OLED / Enc   │
 └─────────────────────────────────────────────┘
 ```
 
@@ -48,20 +50,21 @@ zero-kb02（RP2040）
                   └─ 6KRO キーボードレポート
 ```
 
-### 将来構成（Phase 3 以降）
+### 周辺機器構成（Phase 4 で実装済み）
 
 ```
 engine/
+  ├── peripheral.go        ← Peripheral インターフェース定義
   ├── matrix/
   ├── keycode/
-  └── peripheral/          ← Phase 3 以降追加
-        ├── encoder/
-        ├── led/
-        ├── oled/
-        └── joystick/
+  └── peripheral/
+        ├── encoder/       ← ロータリーエンコーダー（GP3/GP4）
+        ├── led/           ← RGB LED WS2812/SK6812（GP1、12 LED）
+        ├── oled/          ← OLED SSD1306（GP12/GP13、I2C）
+        └── joystick/      ← Phase 5 で追加予定
 ```
 
-`engine` → `peripheral` の依存はインターフェース経由（Phase 3 で導入）。
+`engine` → `peripheral` の依存は `engine.Peripheral` インターフェース経由。
 
 ---
 
@@ -388,7 +391,9 @@ func (kb *Keyboard) Tick()
 | `MaxLayers` | 定数 | 最大レイヤー数（4） |
 | `Resolver` | 構造体 | レイヤー解決（最上位アクティブレイヤーから走査） |
 | `TapDetector` | 構造体 | タップ/ホールド判定（LT/TT キー用） |
-| `Config` | 構造体 | エンジン設定（Scanner, Keymap, ProductName） |
+| `Peripheral` | インターフェース | 周辺機器共通（`Init()`, `Tick()`, `OnLayerChange()`) |
+| `MaxPeripherals` | 定数 | 登録可能な周辺機器の最大数（4） |
+| `Config` | 構造体 | エンジン設定（Scanner, Keymap, ProductName, Peripherals） |
 | `New(cfg)` | コンストラクタ | Config から Keyboard を生成して返す |
 | `(*Keyboard).Run()` | メソッド | キーボード起動（初期化 + 無限ループ、戻らない） |
 | `ErrKeyOverflow` | エラー | 6KRO 上限超過（7 キー以上同時押し） |
