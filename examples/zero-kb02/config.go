@@ -32,4 +32,10 @@ var (
 
 	// ledPin は RGB LED（SK6812MINI-E）のデータピンです。
 	ledPin = machine.GPIO1
+
+	// oledSDA は OLED（SSD1306）の I2C データピンです。
+	oledSDA = machine.GPIO12
+
+	// oledSCL は OLED（SSD1306）の I2C クロックピンです。
+	oledSCL = machine.GPIO13
 )
