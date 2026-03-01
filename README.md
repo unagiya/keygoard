@@ -50,8 +50,8 @@ make build
 # 実機への書き込み
 make flash
 
-# テスト（machine 非依存パッケージ）
-go test ./keycode/... ./matrix/...
+# テスト（machine 非依存パッケージ + TinyGo ビルド検証）
+make test
 
 # フォーマット
 make fmt
@@ -68,9 +68,10 @@ make lint
 
 | Phase | 内容 | 状態 |
 |---|---|---|
-| Phase 1 | 最小 HID キーボード（マトリクス・デバウンス・HID） | 進行中 |
-| Phase 2 | レイヤーシステム（MO / TG / TT / LT） | 未着手 |
-| Phase 3 | 周辺機器（エンコーダー・LED・OLED） | 未着手 |
-| Phase 4 | Joystick + Gamepad | 未着手 |
-| Phase 5 | Split 対応 | 未着手 |
-| Phase 6 | 高度な機能（マクロ・Flash 永続化・NKRO） | 未着手 |
+| Phase 1 | 最小 HID キーボード（マトリクス・デバウンス・HID） | 完了 |
+| Phase 2 | フレームワーク API ブラッシュアップ（engine.Run + USB Product Name） | 完了 |
+| Phase 3 | レイヤーシステム（MO / TG / TT / LT / TRNS） | 完了 |
+| Phase 4 | 周辺機器（エンコーダー・LED・OLED） | 未着手 |
+| Phase 5 | Joystick + Gamepad | 未着手 |
+| Phase 6 | Split 対応 | 未着手 |
+| Phase 7 | 高度な機能（マクロ・Flash 永続化・NKRO） | 未着手 |
