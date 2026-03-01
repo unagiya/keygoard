@@ -29,4 +29,7 @@ var (
 
 	// encoderPinB はエンコーダーの B 信号ピンです。
 	encoderPinB = machine.GPIO4
+
+	// ledPin は RGB LED（SK6812MINI-E）のデータピンです。
+	ledPin = machine.GPIO1
 )
