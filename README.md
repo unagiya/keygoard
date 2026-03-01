@@ -71,7 +71,7 @@ make lint
 | Phase 1 | 最小 HID キーボード（マトリクス・デバウンス・HID） | 完了 |
 | Phase 2 | フレームワーク API ブラッシュアップ（engine.Run + USB Product Name） | 完了 |
 | Phase 3 | レイヤーシステム（MO / TG / TT / LT / TRNS） | 完了 |
-| Phase 4 | 周辺機器（エンコーダー・LED・OLED） | 未着手 |
+| Phase 4 | 周辺機器（エンコーダー・LED・OLED） | 完了 |
 | Phase 5 | Joystick + Gamepad | 未着手 |
 | Phase 6 | Split 対応 | 未着手 |
 | Phase 7 以降 | 高度な機能（マクロ・Flash 永続化・NKRO・LED エフェクト・OLED 自由描画） | 未着手 |
