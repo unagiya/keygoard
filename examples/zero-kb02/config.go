@@ -23,4 +23,10 @@ var (
 		machine.GPIO10,
 		machine.GPIO11,
 	}
+
+	// encoderPinA はエンコーダーの A 信号ピンです。
+	encoderPinA = machine.GPIO3
+
+	// encoderPinB はエンコーダーの B 信号ピンです。
+	encoderPinB = machine.GPIO4
 )
