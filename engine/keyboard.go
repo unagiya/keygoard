@@ -16,15 +16,18 @@ import (
 const defaultProductName = "keygoard"
 
 // Keyboard はキーボードエンジンです。
-// マトリクススキャン・レイヤー解決・HID 送信を統合します。
+// マトリクススキャン・レイヤー解決・HID 送信・周辺機器を統合します。
 type Keyboard struct {
-	scanner     *matrix.Scanner
-	keymap      *Keymap
-	productName string
-	prevState   [matrix.RowCount][matrix.ColCount]bool
-	activeKeys  [matrix.RowCount][matrix.ColCount]keycode.Keycode
-	resolver    *Resolver
-	tap         TapDetector
+	scanner         *matrix.Scanner
+	keymap          *Keymap
+	productName     string
+	prevState       [matrix.RowCount][matrix.ColCount]bool
+	activeKeys      [matrix.RowCount][matrix.ColCount]keycode.Keycode
+	resolver        *Resolver
+	tap             TapDetector
+	peripherals     [MaxPeripherals]Peripheral
+	peripheralCount int
+	prevTopLayer    int
 }
 
 // New は Config からキーボードエンジンを生成します。
@@ -34,12 +37,19 @@ func New(cfg *Config) *Keyboard {
 		name = defaultProductName
 	}
 
-	return &Keyboard{
+	kb := &Keyboard{
 		scanner:     cfg.Scanner,
 		keymap:      cfg.Keymap,
 		productName: name,
 		resolver:    NewResolver(cfg.Keymap),
 	}
+
+	for i := 0; i < len(cfg.Peripherals) && i < MaxPeripherals; i++ {
+		kb.peripherals[i] = cfg.Peripherals[i]
+		kb.peripheralCount++
+	}
+
+	return kb
 }
 
 // Run はキーボードを起動します。
@@ -61,16 +71,39 @@ func (kb *Keyboard) Run() {
 func (kb *Keyboard) setup() {
 	kb.scanner.Init()
 
+	// 周辺機器を初期化
+	for i := 0; i < kb.peripheralCount; i++ {
+		kb.peripherals[i].Init()
+	}
+
 	// USB エニュメレーション完了まで待機
 	// fixme: InitEndpointComplete ポーリングに変更することで待機時間を最小化できる
 	_ = machine.USBDev
 	time.Sleep(500 * time.Millisecond)
+
+	// 初期レイヤーを通知
+	kb.notifyLayerChange(0)
 }
 
 // tick は 1 スキャンサイクルを実行します。
-// タップ検出のカウンタ更新・タイムアウトチェックを行った後、
-// キー状態に変化があった場合のみ HID レポートを送信します。
+// 周辺機器のポーリング・タップ検出・キー状態変化の検出を行い、
+// 必要に応じて HID レポートを送信します。
 func (kb *Keyboard) tick() {
+	prevTop := kb.topLayer()
+
+	// 周辺機器の Tick（エンコーダー等のポーリング）
+	for i := 0; i < kb.peripheralCount; i++ {
+		if kc := kb.peripherals[i].Tick(); kc != keycode.None {
+			// 周辺機器からのキーコードはタップとして送信（Down → Up）
+			if err := hidkb.Keyboard.Down(hidkb.Keycode(kc)); err != nil {
+				println("keygoard: Down error:", err.Error())
+			}
+			if err := hidkb.Keyboard.Up(hidkb.Keycode(kc)); err != nil {
+				println("keygoard: Up error:", err.Error())
+			}
+		}
+	}
+
 	// タップカウンタをインクリメント
 	kb.tap.Advance()
 
@@ -86,6 +119,7 @@ func (kb *Keyboard) tick() {
 
 	state, changed := kb.scanner.Scan()
 	if !changed {
+		kb.checkLayerChange(prevTop)
 		return
 	}
 
@@ -106,6 +140,7 @@ func (kb *Keyboard) tick() {
 	}
 
 	kb.prevState = state
+	kb.checkLayerChange(prevTop)
 }
 
 // handlePress はキー押下時の処理を行います。
@@ -184,4 +219,30 @@ func (kb *Keyboard) handleRelease(row, col int) {
 	}
 
 	kb.activeKeys[row][col] = keycode.None
+}
+
+// topLayer は最上位のアクティブレイヤー番号を返します。
+func (kb *Keyboard) topLayer() int {
+	for l := MaxLayers - 1; l >= 0; l-- {
+		if kb.resolver.IsActive(l) {
+			return l
+		}
+	}
+	return 0
+}
+
+// checkLayerChange はレイヤー変更を検出し、変化があれば周辺機器に通知します。
+func (kb *Keyboard) checkLayerChange(prevTop int) {
+	currTop := kb.topLayer()
+	if currTop != prevTop {
+		kb.notifyLayerChange(currTop)
+	}
+}
+
+// notifyLayerChange は全周辺機器にレイヤー変更を通知します。
+func (kb *Keyboard) notifyLayerChange(layer int) {
+	kb.prevTopLayer = layer
+	for i := 0; i < kb.peripheralCount; i++ {
+		kb.peripherals[i].OnLayerChange(layer)
+	}
 }
