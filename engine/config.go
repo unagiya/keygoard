@@ -16,4 +16,8 @@ type Config struct {
 	// 空文字列の場合はデフォルト値 "keygoard" を使用します。
 	// ASCII のみ、最大 126 文字。
 	ProductName string
+
+	// Peripherals はエンジンに統合する周辺機器のリストです。
+	// 最大 MaxPeripherals 個まで登録できます。
+	Peripherals []Peripheral
 }

@@ -4,11 +4,10 @@ EXAMPLE  := ./examples/zero-kb02/
 .PHONY: test build flash fmt lint
 
 # テスト
-# 1. 標準 Go: machine 非依存パッケージ（keycode, matrix/debounce）
-# 2. TinyGo:  RP2040 ターゲットで全パッケージのビルド検証（実機接続が必要）
-test:
-	go test ./keycode/... ./matrix/...
-	tinygo test -target=$(TARGET) ./...
+# 1. TinyGo: RP2040 ターゲットでのコンパイル検証（build 依存）
+# 2. 標準 Go: machine 非依存パッケージのユニットテスト
+test: build
+	go test ./keycode/... ./matrix/... ./engine/...
 
 # TinyGo でのビルド確認
 build:

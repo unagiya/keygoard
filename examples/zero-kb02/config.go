@@ -23,4 +23,19 @@ var (
 		machine.GPIO10,
 		machine.GPIO11,
 	}
+
+	// encoderPinA はエンコーダーの A 信号ピンです。
+	encoderPinA = machine.GPIO3
+
+	// encoderPinB はエンコーダーの B 信号ピンです。
+	encoderPinB = machine.GPIO4
+
+	// ledPin は RGB LED（SK6812MINI-E）のデータピンです。
+	ledPin = machine.GPIO1
+
+	// oledSDA は OLED（SSD1306）の I2C データピンです。
+	oledSDA = machine.GPIO12
+
+	// oledSCL は OLED（SSD1306）の I2C クロックピンです。
+	oledSCL = machine.GPIO13
 )
