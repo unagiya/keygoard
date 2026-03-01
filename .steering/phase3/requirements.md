@@ -106,7 +106,7 @@ Phase 2 で確立したフレームワーク API の上に、複数レイヤー�
 ### スコープ外
 
 - Composite HID（Phase 5）
-- マクロ / コンボ（Phase 7）
-- NKRO（Phase 7）
-- Flash 永続化（Phase 7）
+- マクロ / コンボ（Phase 7 以降）
+- NKRO（Phase 7 以降）
+- Flash 永続化（Phase 7 以降）
 - 周辺機器（encoder / LED / OLED）は Phase 4
