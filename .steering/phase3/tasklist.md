@@ -1,3 +1,4 @@
+
 # Phase 3: レイヤーシステム — タスクリスト
 
 ---
@@ -203,5 +204,5 @@
 - [x] `docs/functional-design.md` を更新（レイヤー解決のデータフロー追加）
 - [x] `docs/repository-structure.md` を更新（新ファイル追記）
 - [x] `ROADMAP.md` の Phase 3 チェックボックスを更新
-- [ ] `phase3` → `main` の PR 作成・マージ
-- [ ] `v0.3.0` タグを作成
+- [x] `phase3` → `main` の PR 作成・マージ
+- [x] `v0.3.0` タグを作成
