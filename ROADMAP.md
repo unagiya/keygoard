@@ -56,10 +56,12 @@
 
 **ゴール: フレームワーク利用者が `engine` と `keycode` の 2 パッケージだけで使えるようにする**
 
-- engine パッケージを Facade 化（matrix・ペリフェラルの設定を Config に統合）
-- `internal/` に layer / tap / matrix を移動（外部 import 不可）
-- `internal/peripheral/` に encoder / led / oled を移動
-- ドキュメント・テストの整合性を維持
+- [x] engine パッケージを Facade 化（matrix・ペリフェラルの設定を Config に統合）
+- [x] `engine.Pin` / `I2CBus` / `Rotation` / `LEDType` 型導入（machine 隠蔽）
+- [x] `internal/` に layer / tap / matrix を移動（外部 import 不可）
+- [x] `internal/peripheral/` に encoder / led / oled を移動
+- [x] ドキュメント・テストの整合性を維持
+- [x] README.md をユーザー向けドキュメントとして整備
 
 ---
 
