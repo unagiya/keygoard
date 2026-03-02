@@ -49,14 +49,15 @@ Go 言語でカスタムキーボードを作れる、軽量でわかりやす�
 | ロータリーエンコーダー | Phase 3 | GP3/GP4 のエンコーダー入力をキーコードに変換 |
 | RGB LED（WS2812） | Phase 3 | GP1 の 12 個の LED をコントロール |
 | OLED（SSD1306） | Phase 3 | GP12/GP13 の I2C OLED に情報を表示 |
-| アナログジョイスティック | Phase 4 | GP28/GP29 のアナログ入力を読み取る |
-| Gamepad（Composite HID） | Phase 4 | キーボード＋ゲームパッドの複合 HID |
-| Split 通信 | Phase 5 | UART 双方向でマスター/スレーブ間を接続 |
-| マクロ / コンボ | Phase 6 | キーシーケンスのマクロ記録・再生 |
-| Flash 永続化 | Phase 6 | キーマップ・設定をフラッシュに保存 |
-| NKRO | Phase 6 | N キーロールオーバー対応 |
-| LED エフェクト拡張 | Phase 7 以降 | リアクティブライティング・個別 LED 制御 |
-| OLED 自由描画 | Phase 7 以降 | 任意テキスト・カスタム画像の表示 |
+| パッケージ構造リファクタリング | Phase 5 | engine Facade 化・internal 導入 |
+| アナログジョイスティック | Phase 6 | GP28/GP29 のアナログ入力を読み取る |
+| Gamepad（Composite HID） | Phase 6 | キーボード＋ゲームパッドの複合 HID |
+| Split 通信 | Phase 7 | UART 双方向でマスター/スレーブ間を接続 |
+| マクロ / コンボ | Phase 8 | キーシーケンスのマクロ記録・再生 |
+| Flash 永続化 | Phase 8 | キーマップ・設定をフラッシュに保存 |
+| NKRO | Phase 8 | N キーロールオーバー対応 |
+| LED エフェクト拡張 | Phase 8 以降 | リアクティブライティング・個別 LED 制御 |
+| OLED 自由描画 | Phase 8 以降 | 任意テキスト・カスタム画像の表示 |
 
 ---
 
@@ -197,7 +198,7 @@ Go 言語でカスタムキーボードを作れる、軽量でわかりやす�
 - `net` / `os` など TinyGo 未対応の標準ライブラリを使用しないこと
 - goroutine を多用しないこと（メインループは 1 goroutine で動かす）
 - 自前 HID 記述子を書かないこと（TinyGo 標準の `machine/usb/hid` を使う）
-- Composite HID は Phase 4 まで追加しないこと
+- Composite HID は Phase 6 まで追加しないこと
 
 ### 対応環境
 

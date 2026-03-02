@@ -49,10 +49,10 @@
 
 | コマンド | 対象 | 備考 |
 |---|---|---|
-| `go test ./keycode/... ./matrix/...` | `machine` 非依存パッケージ | 標準 Go で実行可能。`matrix.go` は `//go:build tinygo` タグで除外 |
+| `go test ./keycode/... ./internal/...` | `machine` 非依存パッケージ | 標準 Go で実行可能。`//go:build tinygo` タグ付きファイルは除外 |
 | `tinygo test -target=waveshare-rp2040-zero ./...` | 全パッケージ（実機テスト） | 実機接続が必要 |
 
-ハードウェア非依存ロジック（`keycode`, `matrix/debounce`, Phase 2 以降の `layer`, `tap`）にはユニットテストを書く。
+ハードウェア非依存ロジック（`keycode`, `internal/matrix/debounce`, `internal/layer`, `internal/tap`, `internal/peripheral/encoder/quadrature`, `internal/peripheral/oled/font`）にはユニットテストを書く。
 テストファイルは対象と同じパッケージ内に `*_test.go` で配置する。
 
 ### ブランチ戦略
@@ -131,7 +131,7 @@ v0.1.0 で「USB HID として認識されない」問題が発生した経緯�
 | ルール | 理由 |
 |---|---|
 | TinyGo 標準の `machine/usb/hid` を使う | 自前 HID 記述子はバグの温床になる |
-| Composite HID は Phase 4 まで追加しない | キーボード単体の認識を先に確実にする |
+| Composite HID は Phase 6 まで追加しない | キーボード単体の認識を先に確実にする |
 | USB エニュメレーション完了まで（起動後 500ms）スキャンを開始しない | エニュメレーション前の HID 送信は無効になる |
 
 ### サードパーティパッケージ

@@ -21,24 +21,6 @@ const (
 	Rotation270 Rotation = 3 // 270° 時計回り
 )
 
-// Config は OLED の設定です。
-type Config struct {
-	// Bus は I2C バスです。
-	Bus *machine.I2C
-	// SDA は I2C データピンです。
-	SDA machine.Pin
-	// SCL は I2C クロックピンです。
-	SCL machine.Pin
-	// Address は I2C アドレスです（通常 0x3C）。
-	Address uint16
-	// Width は画面幅（ピクセル）です。
-	Width int16
-	// Height は画面高（ピクセル）です。
-	Height int16
-	// Rotation はソフトウェアによる画面回転（90° 単位）です。
-	Rotation Rotation
-}
-
 // OLED は SSD1306 OLED ディスプレイを制御します。
 // engine.Peripheral インターフェースを実装します。
 type OLED struct {
@@ -48,26 +30,26 @@ type OLED struct {
 	rotation Rotation
 }
 
-// New は Config から OLED を生成します。
-func New(cfg *Config) *OLED {
-	cfg.Bus.Configure(machine.I2CConfig{
-		SDA:       cfg.SDA,
-		SCL:       cfg.SCL,
+// New は OLED を生成します。
+func New(bus *machine.I2C, sda, scl machine.Pin, address uint16, width, height int16, rotation Rotation) *OLED {
+	bus.Configure(machine.I2CConfig{
+		SDA:       sda,
+		SCL:       scl,
 		Frequency: 400_000,
 	})
 
-	dev := ssd1306.NewI2C(cfg.Bus)
+	dev := ssd1306.NewI2C(bus)
 	dev.Configure(ssd1306.Config{
-		Width:   cfg.Width,
-		Height:  cfg.Height,
-		Address: cfg.Address,
+		Width:   width,
+		Height:  height,
+		Address: address,
 	})
 
 	return &OLED{
 		dev:      dev,
-		width:    cfg.Width,
-		height:   cfg.Height,
-		rotation: cfg.Rotation,
+		width:    width,
+		height:   height,
+		rotation: rotation,
 	}
 }
 

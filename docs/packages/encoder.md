@@ -1,12 +1,14 @@
-# encoder パッケージ仕様
+ok# encoder パッケージ仕様
+
+## パッケージパス
+
+`github.com/unagiya/keygoard/internal/peripheral/encoder`（非公開: 外部 import 不可）
 
 ## 概要
 
 ロータリーエンコーダーの入力処理を提供するパッケージです。2 相エンコーダーの A/B 信号から回転方向を判定し、割り当てられたキーコードを返します。`engine.Peripheral` インターフェースを実装しています。
 
-## パッケージパス
-
-`github.com/unagiya/keygoard/engine/peripheral/encoder`
+利用者は `engine.EncoderConfig` 経由で設定し、`engine.New()` が内部でこのパッケージを呼び出します。
 
 ## ファイル構成
 
@@ -18,27 +20,11 @@
 
 ## API
 
-### Config
-
-```go
-type Config struct {
-    PinA   machine.Pin     // A 信号ピン
-    PinB   machine.Pin     // B 信号ピン
-    KeyCW  keycode.Keycode // 時計回りに割り当てるキーコード
-    KeyCCW keycode.Keycode // 反時計回りに割り当てるキーコード
-}
-```
-
 ### Encoder
 
 ```go
-// Config からエンコーダーを生成
-enc := encoder.New(&encoder.Config{
-    PinA:   machine.GPIO3,
-    PinB:   machine.GPIO4,
-    KeyCW:  keycode.UpArrow,
-    KeyCCW: keycode.DownArrow,
-})
+// engine/keyboard.go から呼び出される
+enc := encoder.New(pinA, pinB machine.Pin, keyCW, keyCCW keycode.Keycode)
 ```
 
 `engine.Peripheral` インターフェースを実装:

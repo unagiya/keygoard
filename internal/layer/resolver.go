@@ -1,6 +1,9 @@
-package engine
+package layer
 
-import "github.com/unagiya/keygoard/keycode"
+import (
+	"github.com/unagiya/keygoard/internal/matrix"
+	"github.com/unagiya/keygoard/keycode"
+)
 
 // MaxLayers はキーマップの最大レイヤー数です。
 const MaxLayers = 4
@@ -8,14 +11,14 @@ const MaxLayers = 4
 // Resolver はアクティブレイヤーからキーコードを解決します。
 // 最上位のアクティブレイヤーから下方向に走査し、最初の非 TRNS キーコードを返します。
 type Resolver struct {
-	keymap *Keymap
+	layers *[MaxLayers][matrix.RowCount][matrix.ColCount]keycode.Keycode
 	active [MaxLayers]bool
 }
 
 // NewResolver は Resolver を生成します。
 // レイヤー 0 は常に有効な状態で初期化されます。
-func NewResolver(km *Keymap) *Resolver {
-	r := &Resolver{keymap: km}
+func NewResolver(layers *[MaxLayers][matrix.RowCount][matrix.ColCount]keycode.Keycode) *Resolver {
+	r := &Resolver{layers: layers}
 	r.active[0] = true
 	return r
 }
@@ -28,7 +31,7 @@ func (r *Resolver) Resolve(row, col int) keycode.Keycode {
 		if !r.active[l] {
 			continue
 		}
-		kc := r.keymap.Layers[l][row][col]
+		kc := r.layers[l][row][col]
 		if kc != keycode.TRNS {
 			return kc
 		}

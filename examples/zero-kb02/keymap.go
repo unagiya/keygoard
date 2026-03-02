@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/unagiya/keygoard/engine"
 	"github.com/unagiya/keygoard/keycode"
-	"github.com/unagiya/keygoard/matrix"
 )
 
 // defaultKeymap は zero-kb02 のキーマップです（3 行 × 4 列）。
@@ -24,7 +23,7 @@ import (
 //   - 短押し（< 200ms）: Z を入力
 //   - 長押し（>= 200ms）: レイヤー 1 を有効化（ホールド中のみ）
 var defaultKeymap = &engine.Keymap{
-	Layers: [engine.MaxLayers][matrix.RowCount][matrix.ColCount]keycode.Keycode{
+	Layers: [engine.MaxLayers][engine.RowCount][engine.ColCount]keycode.Keycode{
 		// Layer 0: ベースレイヤー
 		{
 			{keycode.Q, keycode.W, keycode.E, keycode.R},

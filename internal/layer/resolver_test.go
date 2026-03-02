@@ -1,15 +1,16 @@
-package engine
+package layer
 
 import (
 	"testing"
 
+	"github.com/unagiya/keygoard/internal/matrix"
 	"github.com/unagiya/keygoard/keycode"
 )
 
 func TestResolveSingleLayer(t *testing.T) {
-	km := &Keymap{}
-	km.Layers[0] = testLayer(keycode.A, keycode.B, keycode.C, keycode.D)
-	r := NewResolver(km)
+	var layers [MaxLayers][matrix.RowCount][matrix.ColCount]keycode.Keycode
+	layers[0] = testLayer(keycode.A, keycode.B, keycode.C, keycode.D)
+	r := NewResolver(&layers)
 
 	if got := r.Resolve(0, 0); got != keycode.A {
 		t.Errorf("Resolve(0,0) = %#x, want %#x", got, keycode.A)
@@ -20,10 +21,10 @@ func TestResolveSingleLayer(t *testing.T) {
 }
 
 func TestResolveHigherLayerPriority(t *testing.T) {
-	km := &Keymap{}
-	km.Layers[0] = testLayer(keycode.A, keycode.B, keycode.C, keycode.D)
-	km.Layers[1] = testLayer(keycode.Num1, keycode.Num2, keycode.Num3, keycode.Num4)
-	r := NewResolver(km)
+	var layers [MaxLayers][matrix.RowCount][matrix.ColCount]keycode.Keycode
+	layers[0] = testLayer(keycode.A, keycode.B, keycode.C, keycode.D)
+	layers[1] = testLayer(keycode.Num1, keycode.Num2, keycode.Num3, keycode.Num4)
+	r := NewResolver(&layers)
 	r.Activate(1)
 
 	// レイヤー 1 が優先される
@@ -33,12 +34,12 @@ func TestResolveHigherLayerPriority(t *testing.T) {
 }
 
 func TestResolveTRNSFallthrough(t *testing.T) {
-	km := &Keymap{}
-	km.Layers[0] = testLayer(keycode.A, keycode.B, keycode.C, keycode.D)
+	var layers [MaxLayers][matrix.RowCount][matrix.ColCount]keycode.Keycode
+	layers[0] = testLayer(keycode.A, keycode.B, keycode.C, keycode.D)
 	// レイヤー 1: (0,0) は TRNS、(0,1) は Num2
-	km.Layers[1][0][0] = keycode.TRNS
-	km.Layers[1][0][1] = keycode.Num2
-	r := NewResolver(km)
+	layers[1][0][0] = keycode.TRNS
+	layers[1][0][1] = keycode.Num2
+	r := NewResolver(&layers)
 	r.Activate(1)
 
 	// TRNS → レイヤー 0 にフォールバック
@@ -52,11 +53,11 @@ func TestResolveTRNSFallthrough(t *testing.T) {
 }
 
 func TestResolveAllTRNSReturnsNone(t *testing.T) {
-	km := &Keymap{}
+	var layers [MaxLayers][matrix.RowCount][matrix.ColCount]keycode.Keycode
 	// レイヤー 0 も TRNS
-	km.Layers[0][0][0] = keycode.TRNS
-	km.Layers[1][0][0] = keycode.TRNS
-	r := NewResolver(km)
+	layers[0][0][0] = keycode.TRNS
+	layers[1][0][0] = keycode.TRNS
+	r := NewResolver(&layers)
 	r.Activate(1)
 
 	if got := r.Resolve(0, 0); got != keycode.None {
@@ -65,9 +66,9 @@ func TestResolveAllTRNSReturnsNone(t *testing.T) {
 }
 
 func TestResolveNoneOnLayer0(t *testing.T) {
-	km := &Keymap{}
+	var layers [MaxLayers][matrix.RowCount][matrix.ColCount]keycode.Keycode
 	// レイヤー 0 が None（ゼロ値）の場合はそのまま None を返す
-	r := NewResolver(km)
+	r := NewResolver(&layers)
 
 	if got := r.Resolve(0, 0); got != keycode.None {
 		t.Errorf("Resolve(0,0) = %#x, want None", got)
@@ -75,8 +76,8 @@ func TestResolveNoneOnLayer0(t *testing.T) {
 }
 
 func TestActivateDeactivate(t *testing.T) {
-	km := &Keymap{}
-	r := NewResolver(km)
+	var layers [MaxLayers][matrix.RowCount][matrix.ColCount]keycode.Keycode
+	r := NewResolver(&layers)
 
 	if r.IsActive(1) {
 		t.Error("layer 1 should be inactive initially")
@@ -94,8 +95,8 @@ func TestActivateDeactivate(t *testing.T) {
 }
 
 func TestToggle(t *testing.T) {
-	km := &Keymap{}
-	r := NewResolver(km)
+	var layers [MaxLayers][matrix.RowCount][matrix.ColCount]keycode.Keycode
+	r := NewResolver(&layers)
 
 	r.Toggle(2)
 	if !r.IsActive(2) {
@@ -109,8 +110,8 @@ func TestToggle(t *testing.T) {
 }
 
 func TestLayer0CannotBeDeactivated(t *testing.T) {
-	km := &Keymap{}
-	r := NewResolver(km)
+	var layers [MaxLayers][matrix.RowCount][matrix.ColCount]keycode.Keycode
+	r := NewResolver(&layers)
 
 	r.Deactivate(0)
 	if !r.IsActive(0) {
@@ -124,8 +125,8 @@ func TestLayer0CannotBeDeactivated(t *testing.T) {
 }
 
 func TestLayer0AlwaysActive(t *testing.T) {
-	km := &Keymap{}
-	r := NewResolver(km)
+	var layers [MaxLayers][matrix.RowCount][matrix.ColCount]keycode.Keycode
+	r := NewResolver(&layers)
 
 	if !r.IsActive(0) {
 		t.Error("layer 0 should be active on init")
@@ -133,8 +134,8 @@ func TestLayer0AlwaysActive(t *testing.T) {
 }
 
 func TestIsActiveOutOfRange(t *testing.T) {
-	km := &Keymap{}
-	r := NewResolver(km)
+	var layers [MaxLayers][matrix.RowCount][matrix.ColCount]keycode.Keycode
+	r := NewResolver(&layers)
 
 	if r.IsActive(-1) {
 		t.Error("IsActive(-1) should return false")
@@ -145,8 +146,8 @@ func TestIsActiveOutOfRange(t *testing.T) {
 }
 
 func TestActivateOutOfRange(t *testing.T) {
-	km := &Keymap{}
-	r := NewResolver(km)
+	var layers [MaxLayers][matrix.RowCount][matrix.ColCount]keycode.Keycode
+	r := NewResolver(&layers)
 
 	// パニックしないことを確認
 	r.Activate(-1)
@@ -158,11 +159,11 @@ func TestActivateOutOfRange(t *testing.T) {
 }
 
 // testLayer はテスト用に最初の 4 キー（row=0, col=0..3）を設定したレイヤーを返します。
-func testLayer(k0, k1, k2, k3 keycode.Keycode) [3][4]keycode.Keycode {
-	var layer [3][4]keycode.Keycode
-	layer[0][0] = k0
-	layer[0][1] = k1
-	layer[0][2] = k2
-	layer[0][3] = k3
-	return layer
+func testLayer(k0, k1, k2, k3 keycode.Keycode) [matrix.RowCount][matrix.ColCount]keycode.Keycode {
+	var l [matrix.RowCount][matrix.ColCount]keycode.Keycode
+	l[0][0] = k0
+	l[0][1] = k1
+	l[0][2] = k2
+	l[0][3] = k3
+	return l
 }

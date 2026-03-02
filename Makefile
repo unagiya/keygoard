@@ -7,7 +7,7 @@ EXAMPLE  := ./examples/zero-kb02/
 # 1. TinyGo: RP2040 ターゲットでのコンパイル検証（build 依存）
 # 2. 標準 Go: machine 非依存パッケージのユニットテスト
 test: build
-	go test ./keycode/... ./matrix/... ./engine/...
+	go test ./keycode/... ./internal/...
 
 # TinyGo でのビルド確認
 build:

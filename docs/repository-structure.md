@@ -16,43 +16,46 @@ keygoard/
 ├── go.sum                       ← Go 依存ハッシュ
 ├── go.work                      ← Go ワークスペース定義（ローカル開発用）
 │
-├── engine/                      ← 全体統合層（最上位パッケージ）
+├── engine/                      ← 公開 Facade（利用者が import するパッケージ）
 │   ├── keyboard.go              ← メインループ・HID 送信（//go:build tinygo）
-│   ├── config.go                ← Config 構造体（//go:build tinygo）
+│   ├── config.go                ← Config・ペリフェラル設定（//go:build tinygo）
+│   ├── types.go                 ← Pin / I2CBus / Rotation 型定義
 │   ├── peripheral.go            ← Peripheral インターフェース定義
-│   ├── keymap.go                ← キーマップ構造体
-│   ├── layer.go                 ← Resolver（レイヤー解決ロジック）
-│   ├── layer_test.go            ← Resolver ユニットテスト
-│   ├── tap.go                   ← TapDetector（タップ/ホールド判定）
-│   ├── tap_test.go              ← TapDetector ユニットテスト
-│   ├── errors.go                ← エラー定義
+│   ├── keymap.go                ← Keymap 構造体・RowCount/ColCount 再エクスポート
+│   └── errors.go                ← エラー定義
+│
+├── keycode/                     ← 公開パッケージ（利用者が import するパッケージ）
+│   ├── keycode.go               ← キーコード型・定数
+│   └── keycode_test.go          ← ユニットテスト
+│
+├── internal/                    ← 非公開パッケージ（外部 import 不可）
+│   ├── matrix/                  ← マトリクススキャン・デバウンス
+│   │   ├── const.go             ← マトリクスサイズ定数
+│   │   ├── matrix.go            ← GPIO スキャン実装（//go:build tinygo）
+│   │   ├── debounce.go          ← デバウンスロジック（machine 非依存）
+│   │   └── debounce_test.go     ← デバウンスユニットテスト
+│   ├── layer/                   ← レイヤー解決
+│   │   ├── resolver.go          ← Resolver（最上位アクティブレイヤーから走査）
+│   │   └── resolver_test.go     ← ユニットテスト
+│   ├── tap/                     ← タップ/ホールド判定
+│   │   ├── detector.go          ← Detector（LT/TT キー用）
+│   │   └── detector_test.go     ← ユニットテスト
 │   └── peripheral/              ← 周辺機器ドライバ群
 │       ├── encoder/             ← ロータリーエンコーダー
 │       │   ├── quadrature.go    ← クワドラチャデコーダ（machine 非依存）
 │       │   ├── quadrature_test.go ← ユニットテスト
 │       │   └── encoder.go       ← GPIO 読み取り（//go:build tinygo）
-│       ├── led/                 ← RGB LED（WS2812/SK6812）
+│       ├── led/                 ← RGB LED（WS2812）
 │       │   └── led.go           ← LED 制御（//go:build tinygo）
 │       └── oled/                ← OLED ディスプレイ（SSD1306）
 │           ├── font.go          ← 8x8 ビットマップフォント定義
 │           ├── font_test.go     ← ユニットテスト
 │           └── oled.go          ← SSD1306 I2C 制御（//go:build tinygo）
 │
-├── matrix/                      ← マトリクススキャン・デバウンス
-│   ├── const.go                 ← マトリクスサイズ定数
-│   ├── matrix.go                ← GPIO スキャン実装（//go:build tinygo）
-│   ├── debounce.go              ← デバウンスロジック（machine 非依存）
-│   └── debounce_test.go         ← デバウンスユニットテスト
-│
-├── keycode/                     ← HID キーコード定数定義
-│   ├── keycode.go               ← キーコード型・定数
-│   └── keycode_test.go          ← ユニットテスト
-│
 ├── examples/                    ← フレームワーク使用例（別モジュール）
 │   └── zero-kb02/               ← zero-kb02 向けファームウェアサンプル
 │       ├── go.mod               ← モジュール定義（github.com/.../examples/zero-kb02）
-│       ├── main.go              ← エントリポイント
-│       ├── config.go            ← ピン定義・ボード設定
+│       ├── main.go              ← エントリポイント（engine + keycode のみ import）
 │       └── keymap.go            ← キーマップ定義
 │
 ├── docs/                        ← プロジェクトドキュメント
@@ -66,44 +69,34 @@ keygoard/
 │       ├── engine.md
 │       ├── keycode.md
 │       ├── matrix.md
+│       ├── layer.md
+│       ├── tap.md
 │       ├── encoder.md
 │       ├── led.md
 │       └── oled.md
 │
 └── .steering/                   ← 作業単位ドキュメント（スペック駆動開発）
-    ├── phase1/                  ← Phase 1 作業ドキュメント
+    ├── phase1/ 〜 phase5/       ← 各 Phase の作業ドキュメント
     │   ├── requirements.md
     │   ├── design.md
     │   └── tasklist.md
-    ├── phase2/                  ← Phase 2 作業ドキュメント
-    │   ├── requirements.md
-    │   ├── design.md
-    │   └── tasklist.md
-    ├── phase3/                  ← Phase 3 作業ドキュメント
-    │   ├── requirements.md
-    │   ├── design.md
-    │   └── tasklist.md
-    └── phase4/                  ← Phase 4 作業ドキュメント
-        ├── requirements.md
-        ├── design.md
-        └── tasklist.md
+    ...
 ```
 
-### 将来の構成（Phase 5 以降）
+### 将来の構成（Phase 6 以降）
 
 ```
 keygoard/
 ├── ...（上記と同様）
 │
-├── engine/
-│   └── peripheral/
-│       ├── ...（上記と同様）
-│       └── joystick/            ← アナログジョイスティック（Phase 5）
+├── internal/peripheral/
+│   ├── ...（上記と同様）
+│   └── joystick/                ← アナログジョイスティック（Phase 6）
 │
 └── docs/packages/               ← フェーズ進行に伴い追加
-    ├── joystick.md              ← Phase 5
-    ├── split.md                 ← Phase 6
-    └── storage.md               ← Phase 7 以降
+    ├── joystick.md              ← Phase 6
+    ├── split.md                 ← Phase 7
+    └── storage.md               ← Phase 8 以降
 ```
 
 ---
@@ -114,11 +107,13 @@ keygoard/
 
 | ディレクトリ | 役割 | machine 依存 |
 |---|---|---|
-| `engine/` | 全コンポーネントを統合するメインループ。パッケージ依存の最上位層 | あり |
-| `engine/peripheral/` | 周辺機器ドライバ群。`engine` からはインターフェース経由で参照（Phase 3 以降） | あり |
-| `matrix/` | マトリクススキャン（GPIO）とデバウンスロジック。ファイル単位で依存を分離 | 一部（`matrix.go` のみ） |
+| `engine/` | 公開 Facade。Config・Peripheral インターフェース・ハードウェア抽象型を提供 | あり |
 | `keycode/` | HID キーコードの型・定数定義。他パッケージに依存しない | なし |
-| `examples/` | ボード別のエントリポイント・設定・キーマップ。ビルドターゲットはここを指定する | あり |
+| `internal/matrix/` | マトリクススキャン（GPIO）とデバウンスロジック | 一部（`matrix.go` のみ） |
+| `internal/layer/` | レイヤー解決ロジック | なし |
+| `internal/tap/` | タップ/ホールド判定 | なし |
+| `internal/peripheral/` | 周辺機器ドライバ群 | あり |
+| `examples/` | ボード別のエントリポイント・キーマップ。ビルドターゲットはここを指定する | あり |
 
 ### ドキュメント
 
@@ -147,16 +142,16 @@ keygoard/
 
 **`//go:build tinygo` タグの使い分け**
 
-フレームワーク本体（`engine/`, `matrix/`, `keycode/`）のうち、`machine` パッケージに依存するファイルには必ず `//go:build tinygo` タグを付ける。
+フレームワーク本体（`engine/`, `internal/`, `keycode/`）のうち、`machine` パッケージに依存するファイルには必ず `//go:build tinygo` タグを付ける。
 これにより、標準 `go test` でのビルドエラーを防ぐ。
 
 `examples/` は別モジュールかつ TinyGo 専用ビルドターゲットであるため、タグなしで `machine` を import してよい。
 
 | タグ | 対象ファイル例 |
 |---|---|
-| `//go:build tinygo` | `matrix/matrix.go`, `engine/keyboard.go`, `engine/config.go`, `engine/peripheral/encoder/encoder.go`, `engine/peripheral/led/led.go`, `engine/peripheral/oled/oled.go` |
-| タグなし | `matrix/debounce.go`, `keycode/keycode.go`, `matrix/const.go`, `engine/layer.go`, `engine/tap.go`, `engine/keymap.go`, `engine/peripheral.go`, `engine/peripheral/encoder/quadrature.go`, `engine/peripheral/oled/font.go` |
-| タグなし（`examples/` のみ） | `examples/zero-kb02/config.go`, `examples/zero-kb02/main.go` |
+| `//go:build tinygo` | `engine/keyboard.go`, `engine/config.go`, `internal/matrix/matrix.go`, `internal/peripheral/encoder/encoder.go`, `internal/peripheral/led/led.go`, `internal/peripheral/oled/oled.go` |
+| タグなし | `engine/types.go`, `engine/keymap.go`, `engine/peripheral.go`, `keycode/keycode.go`, `internal/matrix/const.go`, `internal/matrix/debounce.go`, `internal/layer/resolver.go`, `internal/tap/detector.go`, `internal/peripheral/encoder/quadrature.go`, `internal/peripheral/oled/font.go` |
+| タグなし（`examples/` のみ） | `examples/zero-kb02/main.go` |
 
 **テストファイル**
 

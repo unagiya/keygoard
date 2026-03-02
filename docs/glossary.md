@@ -47,8 +47,8 @@
 | **USB エニュメレーション（USB Enumeration）** | USB デバイスを接続した際に OS がデバイスを認識・設定する過程。完了まで数百 ms かかる |
 | **HID レポート（HID Report）** | キーボードが OS に送信するデータパケット。本プロジェクトでは 8 バイト固定長 |
 | **6KRO（6-Key Rollover）** | 同時押しを最大 6 キーまで認識できる方式。本プロジェクトの Phase 1〜3 で採用 |
-| **NKRO（N-Key Rollover）** | すべてのキーの同時押しを認識できる方式（Phase 6 で実装予定） |
-| **Composite HID** | キーボードとゲームパッドなど複数の HID デバイスを 1 つの USB デバイスとして組み合わせる方式（Phase 4 で実装予定） |
+| **NKRO（N-Key Rollover）** | すべてのキーの同時押しを認識できる方式（Phase 8 で実装予定） |
+| **Composite HID** | キーボードとゲームパッドなど複数の HID デバイスを 1 つの USB デバイスとして組み合わせる方式（Phase 6 で実装予定） |
 | **HID 記述子（HID Descriptor）** | HID デバイスの能力を OS に伝えるバイト列。本プロジェクトでは TinyGo 標準の `machine/usb/hid` を使い自前実装しない |
 
 ### ハードウェア関連
@@ -63,9 +63,9 @@
 | **エンコーダー（Encoder）** | ロータリーエンコーダー。回転操作を A/B 信号として出力する入力デバイス（Phase 3 以降） |
 | **WS2812 / SK6812** | プログラマブル RGB LED。1 本の信号線で色・輝度を制御できる（Phase 3 以降） |
 | **SSD1306** | I2C 接続の OLED ディスプレイドライバ IC（Phase 3 以降） |
-| **フラッシュ（Flash）** | MCU 内蔵の不揮発性メモリ。キーマップや設定の永続化に使用する（Phase 6 以降） |
-| **リアクティブライティング（Reactive Lighting）** | キー押下時に対応する LED を点灯させるエフェクト。マトリクス位置と LED インデックスのマッピングが必要（Phase 7 以降） |
-| **OLED 自由描画** | OLED ディスプレイに任意のテキストやカスタム画像を描画する機能（Phase 7 以降） |
+| **フラッシュ（Flash）** | MCU 内蔵の不揮発性メモリ。キーマップや設定の永続化に使用する（Phase 8 以降） |
+| **リアクティブライティング（Reactive Lighting）** | キー押下時に対応する LED を点灯させるエフェクト。マトリクス位置と LED インデックスのマッピングが必要（Phase 8 以降） |
+| **OLED 自由描画** | OLED ディスプレイに任意のテキストやカスタム画像を描画する機能（Phase 8 以降） |
 
 ---
 
@@ -127,9 +127,16 @@
 |---|---|---|
 | `Keycode` | `keycode` | HID キーコードを表す型（`uint16`） |
 | `Keyboard` | `engine` | エンジン最上位の構造体。スキャン・キーマップ解決・HID 送信を統合する |
-| `Keymap` | `engine` | レイヤー 0 のキー割り当てを保持する構造体 |
-| `Scanner` | `matrix` | COL2ROW マトリクススキャナーの構造体 |
-| `Debouncer` | `matrix` | キーごとのデバウンス状態を保持する構造体 |
+| `Config` | `engine` | エンジン設定（ピン・キーマップ・ペリフェラル）を保持する構造体 |
+| `Keymap` | `engine` | 複数レイヤーのキー割り当てを保持する構造体 |
+| `Pin` | `engine` | GPIO ピン番号を表す型（`uint8`） |
+| `I2CBus` | `engine` | I2C バス識別子を表す型（`uint8`） |
+| `Rotation` | `engine` | ディスプレイ回転角度を表す型（`uint8`） |
+| `Peripheral` | `engine` | 周辺機器インターフェース（`Init`, `Tick`, `OnLayerChange`） |
+| `Scanner` | `internal/matrix` | COL2ROW マトリクススキャナーの構造体 |
+| `Debouncer` | `internal/matrix` | キーごとのデバウンス状態を保持する構造体 |
+| `Resolver` | `internal/layer` | レイヤー解決（最上位アクティブレイヤーから走査） |
+| `Detector` | `internal/tap` | タップ/ホールド判定の構造体 |
 
 ### メソッド・関数
 
@@ -146,11 +153,13 @@
 
 | 識別子 | パッケージ | 意味 |
 |---|---|---|
-| `RowCount` | `matrix` | マトリクスの行数（3） |
-| `ColCount` | `matrix` | マトリクスの列数（4） |
-| `debounceThr` | `matrix` | デバウンス確定閾値（5 サイクル、非公開） |
+| `RowCount` | `engine`（`internal/matrix` から再エクスポート） | マトリクスの行数（3） |
+| `ColCount` | `engine`（`internal/matrix` から再エクスポート） | マトリクスの列数（4） |
+| `MaxLayers` | `engine`（`internal/layer` から再エクスポート） | 最大レイヤー数（4） |
+| `MaxPeripherals` | `engine` | 登録可能な周辺機器の最大数（4） |
+| `MaxLayerColors` | `engine` | レイヤーごとの色設定の最大数（4） |
+| `debounceThr` | `internal/matrix` | デバウンス確定閾値（5 サイクル、非公開） |
 | `None` | `keycode` | キー未割り当てを表す定数（`0x0000`） |
 | `ModLeftCtrl` … | `keycode` | 修飾キー定数（`0xE000` 台） |
 | `A` … `Z`, `F1` … | `keycode` | 通常キー定数（`0xF000` 台） |
 | `ErrKeyOverflow` | `engine` | 6KRO 上限超過エラー |
-| `Layer0` | `engine.Keymap` | レイヤー 0 のキー割り当て配列 |

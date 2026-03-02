@@ -1,18 +1,20 @@
 # led パッケージ仕様
 
+## パッケージパス
+
+`github.com/unagiya/keygoard/internal/peripheral/led`（非公開: 外部 import 不可）
+
 ## 概要
 
 WS2812 互換の RGB LED 制御を提供するパッケージです。レイヤー変更時に全 LED の色を切り替えることで、現在のアクティブレイヤーを視覚的に表示します。`engine.Peripheral` インターフェースを実装しています。
 
-## パッケージパス
-
-`github.com/unagiya/keygoard/engine/peripheral/led`
+利用者は `engine.LEDConfig` 経由で設定し、`engine.New()` が内部でこのパッケージを呼び出します。
 
 ## ファイル構成
 
 | ファイル  | machine 依存 | 役割                              |
 |-----------|:------------:|-----------------------------------|
-| `led.go`  | あり         | `LED` 構造体・WS2812 制御         |
+| `led.go`  | あり         | `LED` 構造体・WS2812/SK6812 制御  |
 
 ## API
 
@@ -22,43 +24,25 @@ WS2812 互換の RGB LED 制御を提供するパッケージです。レイヤ�
 type DeviceType uint8
 
 const (
-    WS2812 DeviceType = iota // WS2812 / SK6812MINI-E（RGB、3 バイト/LED）
-    SK6812                   // SK6812（RGBW、4 バイト/LED）
+    TypeWS2812 DeviceType = iota // WS2812 / SK6812MINI-E（RGB、3 バイト/LED）
+    TypeSK6812                   // SK6812（RGBW、4 バイト/LED）
 )
 ```
 
-### Config
-
-```go
-type Config struct {
-    Pin         machine.Pin                   // データピン
-    Count       uint8                         // LED 数
-    Type        DeviceType                    // LED デバイス種別（デフォルト: WS2812）
-    LayerColors [MaxLayerColors]color.RGBA    // レイヤーごとの LED 色
-}
-```
+利用者は内部の `DeviceType` を直接扱いません。`engine.LEDType`（`engine.WS2812` / `engine.SK6812`）を `LEDConfig.Type` に指定すると、engine が内部で変換します。
 
 ### LED
 
 ```go
-leds := led.New(&led.Config{
-    Pin:   machine.GPIO1,
-    Count: 12,
-    Type:  led.WS2812,
-    LayerColors: [led.MaxLayerColors]color.RGBA{
-        {G: 8},              // Layer 0: 緑
-        {B: 8},              // Layer 1: 青
-        {R: 8},              // Layer 2: 赤
-        {R: 4, G: 4, B: 4},  // Layer 3: 白
-    },
-})
+// engine/keyboard.go から呼び出される
+l := led.New(pin machine.Pin, count uint8, deviceType DeviceType, layerColors [MaxLayerColors]color.RGBA)
 ```
 
 `engine.Peripheral` インターフェースを実装:
 
 | メソッド               | 動作                                            |
 |------------------------|-------------------------------------------------|
-| `Init()`               | ピンを出力に設定、WS2812 デバイス初期化、Layer 0 の色で全点灯 |
+| `Init()`               | ピンを出力に設定、デバイス種別に応じた初期化、Layer 0 の色で全点灯 |
 | `Tick() Keycode`       | keycode.None を返す（毎サイクルの処理なし）     |
 | `OnLayerChange(int)`   | 全 LED をレイヤーに対応する色に更新             |
 
