@@ -52,23 +52,34 @@
 
 ---
 
-## Phase 5: Joystick + Gamepad（Phase 4 完了後）
+## Phase 5: パッケージ構造リファクタリング（Phase 4 完了後）
+
+**ゴール: フレームワーク利用者が `engine` と `keycode` の 2 パッケージだけで使えるようにする**
+
+- engine パッケージを Facade 化（matrix・ペリフェラルの設定を Config に統合）
+- `internal/` に layer / tap / matrix を移動（外部 import 不可）
+- `internal/peripheral/` に encoder / led / oled を移動
+- ドキュメント・テストの整合性を維持
+
+---
+
+## Phase 6: Joystick + Gamepad（Phase 5 完了後）
 
 - アナログジョイスティック（GP28/GP29）
 - Composite HID（キーボード＋ゲームパッド）← Composite はここまで遅らせる
 
 ---
 
-## Phase 6: Split 対応（Phase 5 完了後）
+## Phase 7: Split 対応（Phase 6 完了後）
 
 - UART 双方向通信
 - マスター/スレーブ分離
 
 ---
 
-## Phase 7 以降: 高度な機能（Phase 6 完了後）
+## Phase 8 以降: 高度な機能（Phase 7 完了後）
 
-以下の機能は優先度・依存関係に応じて Phase 7 以降で段階的に実装する。
+以下の機能は優先度・依存関係に応じて Phase 8 以降で段階的に実装する。
 
 - マクロ / コンボ
 - Flash 永続化（キーマップ・設定）

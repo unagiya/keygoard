@@ -8,18 +8,6 @@ import (
 	"github.com/unagiya/keygoard/keycode"
 )
 
-// Config はエンコーダーの設定です。
-type Config struct {
-	// PinA は A 信号ピンです。
-	PinA machine.Pin
-	// PinB は B 信号ピンです。
-	PinB machine.Pin
-	// KeyCW は時計回りに割り当てるキーコードです。
-	KeyCW keycode.Keycode
-	// KeyCCW は反時計回りに割り当てるキーコードです。
-	KeyCCW keycode.Keycode
-}
-
 // Encoder はロータリーエンコーダーの入力を処理します。
 // engine.Peripheral インターフェースを実装します。
 type Encoder struct {
@@ -30,13 +18,13 @@ type Encoder struct {
 	decoder Decoder
 }
 
-// New は Config からエンコーダーを生成します。
-func New(cfg *Config) *Encoder {
+// New はエンコーダーを生成します。
+func New(pinA, pinB machine.Pin, keyCW, keyCCW keycode.Keycode) *Encoder {
 	return &Encoder{
-		pinA:   cfg.PinA,
-		pinB:   cfg.PinB,
-		keyCW:  cfg.KeyCW,
-		keyCCW: cfg.KeyCCW,
+		pinA:   pinA,
+		pinB:   pinB,
+		keyCW:  keyCW,
+		keyCCW: keyCCW,
 	}
 }
 

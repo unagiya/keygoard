@@ -1,12 +1,14 @@
 # oled パッケージ仕様
 
+## パッケージパス
+
+`github.com/unagiya/keygoard/internal/peripheral/oled`（非公開: 外部 import 不可）
+
 ## 概要
 
 SSD1306 OLED ディスプレイの制御を提供するパッケージです。レイヤー変更時に現在のレイヤー番号（"L0"〜"L3"）を画面中央に描画します。ソフトウェアによる 90° 単位の画面回転をサポートしています。`engine.Peripheral` インターフェースを実装しています。
 
-## パッケージパス
-
-`github.com/unagiya/keygoard/engine/peripheral/oled`
+利用者は `engine.OLEDConfig` 経由で設定し、`engine.New()` が内部でこのパッケージを呼び出します。
 
 ## ファイル構成
 
@@ -31,32 +33,13 @@ const (
 )
 ```
 
-### Config
-
-```go
-type Config struct {
-    Bus      *machine.I2C   // I2C バス
-    SDA      machine.Pin    // I2C データピン
-    SCL      machine.Pin    // I2C クロックピン
-    Address  uint16         // I2C アドレス（通常 0x3C）
-    Width    int16          // 画面幅（ピクセル）
-    Height   int16          // 画面高（ピクセル）
-    Rotation Rotation       // ソフトウェア画面回転（90° 単位）
-}
-```
+`engine.Rotation` と値が対応しており、engine が内部で `oled.Rotation(cfg.OLED.Rotation)` として変換します。
 
 ### OLED
 
 ```go
-display := oled.New(&oled.Config{
-    Bus:      machine.I2C0,
-    SDA:      machine.GPIO12,
-    SCL:      machine.GPIO13,
-    Address:  0x3C,
-    Width:    128,
-    Height:   64,
-    Rotation: oled.Rotation180,
-})
+// engine/keyboard.go から呼び出される
+o := oled.New(bus *machine.I2C, sda, scl machine.Pin, address uint16, width, height int16, rotation Rotation)
 ```
 
 `engine.Peripheral` インターフェースを実装:
@@ -66,6 +49,13 @@ display := oled.New(&oled.Config{
 | `Init()`               | ディスプレイをクリアし、"L0" を描画             |
 | `Tick() Keycode`       | keycode.None を返す（毎サイクルの処理なし）     |
 | `OnLayerChange(int)`   | レイヤー番号（"L0"〜"L3"）を画面中央に描画     |
+
+### 内部メソッド
+
+| メソッド                              | 動作                                                |
+|---------------------------------------|-----------------------------------------------------|
+| `logicalSize() (w, h int16)`         | 回転を考慮した論理画面サイズを返す                  |
+| `transformPixel(lx, ly) (px, py)`    | 論理座標を回転に応じた物理座標に変換する            |
 
 ## フォント
 

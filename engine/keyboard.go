@@ -8,8 +8,13 @@ import (
 	hidkb "machine/usb/hid/keyboard"
 	"time"
 
+	"github.com/unagiya/keygoard/internal/layer"
+	"github.com/unagiya/keygoard/internal/matrix"
+	"github.com/unagiya/keygoard/internal/peripheral/encoder"
+	"github.com/unagiya/keygoard/internal/peripheral/led"
+	"github.com/unagiya/keygoard/internal/peripheral/oled"
+	"github.com/unagiya/keygoard/internal/tap"
 	"github.com/unagiya/keygoard/keycode"
-	"github.com/unagiya/keygoard/matrix"
 )
 
 // defaultProductName はフレームワークのデフォルト USB Product Name です。
@@ -23,8 +28,8 @@ type Keyboard struct {
 	productName     string
 	prevState       [matrix.RowCount][matrix.ColCount]bool
 	activeKeys      [matrix.RowCount][matrix.ColCount]keycode.Keycode
-	resolver        *Resolver
-	tap             TapDetector
+	resolver        *layer.Resolver
+	tap             tap.Detector
 	peripherals     [MaxPeripherals]Peripheral
 	peripheralCount int
 	prevTopLayer    int
@@ -37,19 +42,61 @@ func New(cfg *Config) *Keyboard {
 		name = defaultProductName
 	}
 
+	cols := pinsToCols(cfg.ColPins)
+	rows := pinsToRows(cfg.RowPins)
+
 	kb := &Keyboard{
-		scanner:     cfg.Scanner,
+		scanner:     matrix.New(cols, rows),
 		keymap:      cfg.Keymap,
 		productName: name,
-		resolver:    NewResolver(cfg.Keymap),
+		resolver:    layer.NewResolver(&cfg.Keymap.Layers),
 	}
 
-	for i := 0; i < len(cfg.Peripherals) && i < MaxPeripherals; i++ {
-		kb.peripherals[i] = cfg.Peripherals[i]
-		kb.peripheralCount++
+	// 標準ペリフェラルを内部生成
+	if cfg.Encoder != nil {
+		kb.addPeripheral(encoder.New(
+			machine.Pin(cfg.Encoder.PinA),
+			machine.Pin(cfg.Encoder.PinB),
+			cfg.Encoder.KeyCW,
+			cfg.Encoder.KeyCCW,
+		))
+	}
+	if cfg.LED != nil {
+		kb.addPeripheral(led.New(
+			machine.Pin(cfg.LED.Pin),
+			cfg.LED.Count,
+			led.DeviceType(cfg.LED.Type),
+			cfg.LED.LayerColors,
+		))
+	}
+	if cfg.OLED != nil {
+		bus := i2cBus(cfg.OLED.Bus)
+		kb.addPeripheral(oled.New(
+			bus,
+			machine.Pin(cfg.OLED.SDA),
+			machine.Pin(cfg.OLED.SCL),
+			cfg.OLED.Address,
+			cfg.OLED.Width,
+			cfg.OLED.Height,
+			oled.Rotation(cfg.OLED.Rotation),
+		))
+	}
+
+	// カスタムペリフェラルを追加
+	for _, p := range cfg.Peripherals {
+		kb.addPeripheral(p)
 	}
 
 	return kb
+}
+
+// addPeripheral は周辺機器を登録します。上限を超えた場合は無視します。
+func (kb *Keyboard) addPeripheral(p Peripheral) {
+	if kb.peripheralCount >= MaxPeripherals {
+		return
+	}
+	kb.peripherals[kb.peripheralCount] = p
+	kb.peripheralCount++
 }
 
 // Run はキーボードを起動します。
@@ -223,7 +270,7 @@ func (kb *Keyboard) handleRelease(row, col int) {
 
 // topLayer は最上位のアクティブレイヤー番号を返します。
 func (kb *Keyboard) topLayer() int {
-	for l := MaxLayers - 1; l >= 0; l-- {
+	for l := layer.MaxLayers - 1; l >= 0; l-- {
 		if kb.resolver.IsActive(l) {
 			return l
 		}
@@ -240,9 +287,37 @@ func (kb *Keyboard) checkLayerChange(prevTop int) {
 }
 
 // notifyLayerChange は全周辺機器にレイヤー変更を通知します。
-func (kb *Keyboard) notifyLayerChange(layer int) {
-	kb.prevTopLayer = layer
+func (kb *Keyboard) notifyLayerChange(l int) {
+	kb.prevTopLayer = l
 	for i := 0; i < kb.peripheralCount; i++ {
-		kb.peripherals[i].OnLayerChange(layer)
+		kb.peripherals[i].OnLayerChange(l)
+	}
+}
+
+// pinsToCols は Pin スライスをマトリクス列ピン配列に変換します。
+func pinsToCols(pins []Pin) [matrix.ColCount]machine.Pin {
+	var cols [matrix.ColCount]machine.Pin
+	for i := 0; i < len(pins) && i < matrix.ColCount; i++ {
+		cols[i] = machine.Pin(pins[i])
+	}
+	return cols
+}
+
+// pinsToRows は Pin スライスをマトリクス行ピン配列に変換します。
+func pinsToRows(pins []Pin) [matrix.RowCount]machine.Pin {
+	var rows [matrix.RowCount]machine.Pin
+	for i := 0; i < len(pins) && i < matrix.RowCount; i++ {
+		rows[i] = machine.Pin(pins[i])
+	}
+	return rows
+}
+
+// i2cBus は I2CBus を machine.I2C に変換します。
+func i2cBus(bus I2CBus) *machine.I2C {
+	switch bus {
+	case I2C1:
+		return machine.I2C1
+	default:
+		return machine.I2C0
 	}
 }

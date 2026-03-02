@@ -13,26 +13,29 @@
 ```
 ┌─────────────────────────────────────────────┐
 │  examples/zero-kb02/                        │
-│  エントリポイント（別モジュール）            │
-└────────────────┬────────────────────────────┘
-                 │ 呼び出し
-┌────────────────▼────────────────────────────┐
-│  engine/                                    │
-│  メインループ（スキャン → 解決 → HID 送信） │
-│  Peripheral インターフェースで周辺機器を統合 │
-└──┬──────────┬──────────────┬────────────────┘
-   │          │              │
-┌──▼────┐ ┌──▼────────┐ ┌───▼──────────────┐
-│matrix/│ │ keycode/  │ │ peripheral/      │
-│スキャン│ │ 定数定義  │ │ ├ encoder/       │
-│デバウンス│ └──────────┘ │ ├ led/           │
-└──┬────┘              │ └ oled/           │
-   │                   └──────────┬────────┘
-   │    ※ engine/ も machine に直接依存（USB HID）
-┌──▼──────────────────────────────▼───────────┐
+│  エントリポイント（engine + keycode のみ）   │
+└──────┬──────────────────┬───────────────────┘
+       │                  │
+┌──────▼──────┐   ┌───────▼──────┐
+│  engine/    │   │  keycode/    │
+│  公開Facade │   │  公開定数    │
+└──────┬──────┘   └──────────────┘
+       │ internal import
+┌──────▼──────────────────────────────────────┐
+│  internal/                                  │
+│  ├── matrix/    ← スキャン・デバウンス       │
+│  ├── layer/     ← レイヤー解決              │
+│  ├── tap/       ← タップ/ホールド判定       │
+│  └── peripheral/                            │
+│       ├── encoder/ ← エンコーダー           │
+│       ├── led/     ← RGB LED                │
+│       └── oled/    ← OLED                   │
+└──────┬──────────────────────────────────────┘
+       │
+┌──────▼──────────────────────────────────────┐
 │  machine + tinygo.org/x/drivers             │
 │  GPIO / USB HID / WS2812 / SSD1306 / I2C   │
-└─────────────────────────────────────────────┘
+└──────┬──────────────────────────────────────┘
        │
 ┌──────▼──────────────────────────────────────┐
 │  RP2040 ハードウェア（zero-kb02）            │
@@ -50,27 +53,28 @@ zero-kb02（RP2040）
                   └─ 6KRO キーボードレポート
 ```
 
-### 周辺機器構成（Phase 4 で実装済み）
+### 周辺機器構成（Phase 4 で実装、Phase 5 で internal 移動）
 
 ```
 engine/
-  ├── peripheral.go        ← Peripheral インターフェース定義
-  ├── matrix/
-  ├── keycode/
-  └── peripheral/
-        ├── encoder/       ← ロータリーエンコーダー（GP3/GP4）
-        ├── led/           ← RGB LED WS2812/SK6812（GP1、12 LED）
-        ├── oled/          ← OLED SSD1306（GP12/GP13、I2C）
-        └── joystick/      ← Phase 5 で追加予定
+  ├── peripheral.go            ← Peripheral インターフェース定義（公開）
+  └── config.go                ← EncoderConfig/LEDConfig/OLEDConfig（公開）
+
+internal/peripheral/
+  ├── encoder/                 ← ロータリーエンコーダー（GP3/GP4）
+  ├── led/                     ← RGB LED WS2812（GP1、12 LED）
+  ├── oled/                    ← OLED SSD1306（GP12/GP13、I2C）
+  └── joystick/                ← Phase 6 で追加予定
 ```
 
-`engine` → `peripheral` の依存は `engine.Peripheral` インターフェース経由。
+`engine` → `internal/peripheral` は直接 import。
+利用者は `engine.Config` 経由でペリフェラルを設定する。
 
 ---
 
 ## 機能ごとのアーキテクチャ
 
-### マトリクススキャン（matrix パッケージ）
+### マトリクススキャン（internal/matrix パッケージ）
 
 COL2ROW 方式。列を 1 本ずつ High にして全行を読み取る。
 
@@ -88,7 +92,7 @@ Row ピン（入力プルダウン）: GP9, GP10, GP11
 
 スキャン結果は `[Rows][Cols]bool` の固定配列に書き込む（ヒープ割り当てなし）。
 
-### デバウンス（matrix パッケージ内）
+### デバウンス（internal/matrix パッケージ内）
 
 カウンタ方式。ホットパスが `machine` 非依存になるよう `matrix.go` と分離する。
 
@@ -288,14 +292,11 @@ state, changed := s.Scan()
 HID 送信は `machine/usb/hid/keyboard` を直接利用し、独立した `hid/` パッケージは持たない。
 
 ```go
-// Keyboard を生成する
-func New(scanner *matrix.Scanner, km *Keymap) *Keyboard
+// Config からキーボードエンジンを生成する
+func New(cfg *Config) *Keyboard
 
-// ハードウェア初期化（GPIO 初期化 + USB エニュメレーション待機）
-func (kb *Keyboard) Init()
-
-// 1 スキャンサイクルを実行する（メインループから毎回呼び出す）
-func (kb *Keyboard) Tick()
+// キーボード起動（初期化 + 無限ループ、戻らない）
+func (kb *Keyboard) Run()
 ```
 
 **ビルドタグ:** `engine/keyboard.go` は `//go:build tinygo`（標準 Go ビルドから除外）
@@ -370,30 +371,25 @@ func (kb *Keyboard) Tick()
 | `Enter`, `Space` … | 定数 | 基本操作キー |
 | `F1` … `F12` | 定数 | ファンクションキー |
 
-### matrix パッケージ
-
-| 識別子 | 種別 | 説明 |
-|---|---|---|
-| `RowCount`, `ColCount` | 定数 | マトリクスサイズ（3, 4） |
-| `Scanner` | 構造体 | スキャナー本体（GPIO + Debouncer を内包） |
-| `New(cols, rows)` | コンストラクタ | Scanner を生成して返す |
-| `(*Scanner).Init()` | メソッド | GPIO ピン初期化 |
-| `(*Scanner).Scan()` | メソッド | スキャン実行、`(state [RowCount][ColCount]bool, changed bool)` を返す |
-| `Debouncer` | 構造体 | デバウンス状態管理（Scanner に内包） |
-| `(*Debouncer).Update(raw)` | メソッド | デバウンス処理を実行し `(state, changed)` を返す |
-
-### engine パッケージ
+### engine パッケージ（公開 API）
 
 | 識別子 | 種別 | 説明 |
 |---|---|---|
 | `Keyboard` | 構造体 | キーボードエンジン本体 |
+| `Config` | 構造体 | エンジン設定（ピン・キーマップ・ペリフェラル） |
 | `Keymap` | 構造体 | 複数レイヤーキーマップ（`Layers [MaxLayers][RowCount][ColCount]Keycode`） |
-| `MaxLayers` | 定数 | 最大レイヤー数（4） |
-| `Resolver` | 構造体 | レイヤー解決（最上位アクティブレイヤーから走査） |
-| `TapDetector` | 構造体 | タップ/ホールド判定（LT/TT キー用） |
-| `Peripheral` | インターフェース | 周辺機器共通（`Init()`, `Tick()`, `OnLayerChange()`) |
-| `MaxPeripherals` | 定数 | 登録可能な周辺機器の最大数（4） |
-| `Config` | 構造体 | エンジン設定（Scanner, Keymap, ProductName, Peripherals） |
 | `New(cfg)` | コンストラクタ | Config から Keyboard を生成して返す |
 | `(*Keyboard).Run()` | メソッド | キーボード起動（初期化 + 無限ループ、戻らない） |
+| `Peripheral` | インターフェース | 周辺機器共通（`Init()`, `Tick()`, `OnLayerChange()`） |
+| `Pin` | 型（`uint8`） | GPIO ピン番号 |
+| `I2CBus` | 型（`uint8`） | I2C バス識別子（`I2C0`, `I2C1`） |
+| `Rotation` | 型（`uint8`） | OLED 回転（`Rotation0` 〜 `Rotation270`） |
+| `LEDType` | 型（`uint8`） | LED デバイス種別（`WS2812`, `SK6812`） |
+| `EncoderConfig` | 構造体 | エンコーダー設定 |
+| `LEDConfig` | 構造体 | LED 設定 |
+| `OLEDConfig` | 構造体 | OLED 設定 |
+| `MaxLayers` | 定数 | 最大レイヤー数（4） |
+| `RowCount`, `ColCount` | 定数 | マトリクスサイズ（3, 4） |
+| `MaxPeripherals` | 定数 | 登録可能な周辺機器の最大数（4） |
+| `MaxLayerColors` | 定数 | レイヤーごとの色設定の最大数（4） |
 | `ErrKeyOverflow` | エラー | 6KRO 上限超過（7 キー以上同時押し） |

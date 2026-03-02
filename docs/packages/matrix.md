@@ -1,8 +1,12 @@
 # matrix パッケージ仕様
 
+## パッケージパス
+
+`github.com/unagiya/keygoard/internal/matrix`（非公開: 外部 import 不可）
+
 ## 概要
 
-COL2ROW 方式のマトリクススキャンとデバウンス処理を実装します。
+COL2ROW 方式のマトリクススキャンとデバウンス処理を実装します。`engine.New()` が Config の `ColPins` / `RowPins` から内部で Scanner を生成します。
 
 ## ファイル構成
 
@@ -13,14 +17,16 @@ COL2ROW 方式のマトリクススキャンとデバウンス処理を実装し
 | `debounce_test.go`| なし         | デバウンスユニットテスト     |
 | `matrix.go`       | あり         | GPIO スキャン実装            |
 
-## ハードウェア構成（zero-kb02）
+## 定数
 
-| 機能        | GPIO                    | 本数 |
-|-------------|-------------------------|------|
-| 列（出力）  | GP5, GP6, GP7, GP8      | 4    |
-| 行（入力）  | GP9, GP10, GP11         | 3    |
+```go
+const (
+    RowCount = 3
+    ColCount = 4
+)
+```
 
-合計 12 キー（3 行 × 4 列）
+`engine` パッケージが `engine.RowCount` / `engine.ColCount` として再エクスポートしています。
 
 ## スキャン方式
 
@@ -44,20 +50,32 @@ COL2ROW: 列ピンを 1 本ずつ High にして全行ピンを読み取る。
 
 ## API
 
+### Scanner
+
 ```go
-// Scanner 生成
-s := matrix.New(cols, rows)
+// engine/keyboard.go から呼び出される
+s := matrix.New(cols [ColCount]machine.Pin, rows [RowCount]machine.Pin)
 s.Init()
 
-// スキャン（メインループで呼び出す）
+// スキャン（メインループから呼び出す）
 state, changed := s.Scan()
 // state:   [RowCount][ColCount]bool - デバウンス後のキー状態
 // changed: 状態変化があった場合 true
 ```
 
+### Debouncer
+
+```go
+d := Debouncer{}
+state, changed := d.Update(raw [RowCount][ColCount]bool)
+```
+
+- machine 非依存のため標準 Go でテスト可能
+- `Scanner.Scan()` 内部で使用される
+
 ## テスト
 
 ```bash
 # デバウンスロジックのユニットテスト（machine 非依存）
-tinygo test -target=native ./matrix/...
+make test
 ```
