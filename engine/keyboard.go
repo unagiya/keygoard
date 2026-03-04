@@ -11,6 +11,7 @@ import (
 	"github.com/unagiya/keygoard/internal/layer"
 	"github.com/unagiya/keygoard/internal/matrix"
 	"github.com/unagiya/keygoard/internal/peripheral/encoder"
+	"github.com/unagiya/keygoard/internal/peripheral/joystick"
 	"github.com/unagiya/keygoard/internal/peripheral/led"
 	"github.com/unagiya/keygoard/internal/peripheral/oled"
 	"github.com/unagiya/keygoard/internal/tap"
@@ -79,6 +80,27 @@ func New(cfg *Config) *Keyboard {
 			cfg.OLED.Width,
 			cfg.OLED.Height,
 			oled.Rotation(cfg.OLED.Rotation),
+		))
+	}
+	if cfg.Joystick != nil {
+		sens := cfg.Joystick.Sensitivity
+		if sens == 0 {
+			sens = 5
+		}
+		dz := cfg.Joystick.DeadZone
+		if dz == 0 {
+			dz = 3000
+		}
+		kb.addPeripheral(joystick.New(
+			machine.Pin(cfg.Joystick.PinX),
+			machine.Pin(cfg.Joystick.PinY),
+			machine.Pin(cfg.Joystick.PinButton),
+			cfg.Joystick.EnableButton,
+			cfg.Joystick.ButtonKey,
+			sens,
+			dz,
+			cfg.Joystick.InvertX,
+			cfg.Joystick.InvertY,
 		))
 	}
 

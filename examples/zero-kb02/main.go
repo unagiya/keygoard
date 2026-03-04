@@ -3,8 +3,9 @@ package main
 import (
 	"image/color"
 
-	// keyboard パッケージの init() が HID ハンドラを登録するためインポートが必要
+	// keyboard/mouse パッケージの init() が HID ハンドラを登録するためインポートが必要
 	_ "machine/usb/hid/keyboard"
+	_ "machine/usb/hid/mouse"
 
 	"github.com/unagiya/keygoard/engine"
 	"github.com/unagiya/keygoard/keycode"
@@ -40,6 +41,15 @@ func main() {
 			Width:    128,
 			Height:   64,
 			Rotation: engine.Rotation180,
+		},
+		Joystick: &engine.JoystickConfig{
+			PinX:         29,
+			PinY:         28,
+			PinButton:    0,
+			EnableButton: true,
+			ButtonKey:    keycode.None, // マウス左クリック
+			Sensitivity:  5,
+			InvertY:      true,
 		},
 	})
 	kb.Run()

@@ -33,6 +33,9 @@ type Config struct {
 	// OLED は OLED ディスプレイの設定です。nil の場合はスキップします。
 	OLED *OLEDConfig
 
+	// Joystick はアナログジョイスティックの設定です。nil の場合はスキップします。
+	Joystick *JoystickConfig
+
 	// Peripherals はカスタム周辺機器のリストです。
 	// 標準ペリフェラル（Encoder/LED/OLED）と合わせて最大 MaxPeripherals 個まで登録できます。
 	Peripherals []Peripheral
@@ -81,4 +84,27 @@ type OLEDConfig struct {
 	Height int16
 	// Rotation はソフトウェアによる画面回転（90° 単位）です。
 	Rotation Rotation
+}
+
+// JoystickConfig はアナログジョイスティックの設定です。
+type JoystickConfig struct {
+	// PinX は X 軸 ADC ピンの GPIO 番号です。
+	PinX Pin
+	// PinY は Y 軸 ADC ピンの GPIO 番号です。
+	PinY Pin
+	// PinButton はボタンピンの GPIO 番号です（EnableButton が true の場合のみ使用）。
+	PinButton Pin
+	// EnableButton はボタンを有効にするかどうかです。
+	EnableButton bool
+	// ButtonKey はボタンに割り当てるキーコードです。
+	// keycode.None の場合はマウス左クリックを送信します。
+	ButtonKey keycode.Keycode
+	// Sensitivity はマウス移動の感度（1〜10）です。ゼロ値はデフォルト 5 として扱います。
+	Sensitivity uint8
+	// DeadZone はデッドゾーン閾値です。ゼロ値はデフォルト 3000 として扱います。
+	DeadZone uint16
+	// InvertX は X 軸を反転するかどうかです。
+	InvertX bool
+	// InvertY は Y 軸を反転するかどうかです。
+	InvertY bool
 }

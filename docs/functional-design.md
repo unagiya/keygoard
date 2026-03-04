@@ -27,19 +27,22 @@
 │  ├── layer/     ← レイヤー解決              │
 │  ├── tap/       ← タップ/ホールド判定       │
 │  └── peripheral/                            │
-│       ├── encoder/ ← エンコーダー           │
-│       ├── led/     ← RGB LED                │
-│       └── oled/    ← OLED                   │
+│       ├── encoder/  ← エンコーダー          │
+│       ├── led/      ← RGB LED               │
+│       ├── oled/     ← OLED                  │
+│       └── joystick/ ← ジョイスティック      │
 └──────┬──────────────────────────────────────┘
        │
 ┌──────▼──────────────────────────────────────┐
 │  machine + tinygo.org/x/drivers             │
-│  GPIO / USB HID / WS2812 / SSD1306 / I2C   │
+│  GPIO / USB HID (keyboard+mouse) / WS2812  │
+│  SSD1306 / I2C / ADC                        │
 └──────┬──────────────────────────────────────┘
        │
 ┌──────▼──────────────────────────────────────┐
 │  RP2040 ハードウェア（zero-kb02）            │
 │  マトリクス GPIO / USB / LED / OLED / Enc   │
+│  / ADC (Joystick)                           │
 └─────────────────────────────────────────────┘
 ```
 
@@ -53,18 +56,18 @@ zero-kb02（RP2040）
                   └─ 6KRO キーボードレポート
 ```
 
-### 周辺機器構成（Phase 4 で実装、Phase 5 で internal 移動）
+### 周辺機器構成（Phase 4 で実装、Phase 5 で internal 移動、Phase 6 でジョイスティック追加）
 
 ```
 engine/
   ├── peripheral.go            ← Peripheral インターフェース定義（公開）
-  └── config.go                ← EncoderConfig/LEDConfig/OLEDConfig（公開）
+  └── config.go                ← EncoderConfig/LEDConfig/OLEDConfig/JoystickConfig（公開）
 
 internal/peripheral/
   ├── encoder/                 ← ロータリーエンコーダー（GP3/GP4）
   ├── led/                     ← RGB LED WS2812（GP1、12 LED）
   ├── oled/                    ← OLED SSD1306（GP12/GP13、I2C）
-  └── joystick/                ← Phase 6 で追加予定
+  └── joystick/                ← アナログジョイスティック（GP28/GP29、ADC + mouse HID）
 ```
 
 `engine` → `internal/peripheral` は直接 import。
@@ -388,8 +391,9 @@ func (kb *Keyboard) Run()
 | `EncoderConfig` | 構造体 | エンコーダー設定 |
 | `LEDConfig` | 構造体 | LED 設定 |
 | `OLEDConfig` | 構造体 | OLED 設定 |
+| `JoystickConfig` | 構造体 | ジョイスティック設定 |
 | `MaxLayers` | 定数 | 最大レイヤー数（4） |
 | `RowCount`, `ColCount` | 定数 | マトリクスサイズ（3, 4） |
-| `MaxPeripherals` | 定数 | 登録可能な周辺機器の最大数（4） |
+| `MaxPeripherals` | 定数 | 登録可能な周辺機器の最大数（8） |
 | `MaxLayerColors` | 定数 | レイヤーごとの色設定の最大数（4） |
 | `ErrKeyOverflow` | エラー | 6KRO 上限超過（7 キー以上同時押し） |

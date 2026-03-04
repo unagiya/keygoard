@@ -11,7 +11,7 @@ TinyGo ベースのカスタムキーボードファームウェアフレーム�
 - **シンプルな API** — GPIO ピン番号を整数で指定するだけ。ハードウェア抽象層を意識する必要なし
 - **2 パッケージで完結** — `engine`（設定・起動）と `keycode`（キーコード定数）のみ
 - **レイヤーシステム** — 最大 4 レイヤー。MO / TG / LT / TT によるレイヤー切り替え
-- **周辺機器サポート** — ロータリーエンコーダー、RGB LED（WS2812/SK6812）、OLED（SSD1306）
+- **周辺機器サポート** — ロータリーエンコーダー、RGB LED（WS2812/SK6812）、OLED（SSD1306）、アナログジョイスティック（マウス）
 - **ゼロ割り当てホットパス** — スキャンループ内でヒープ割り当てなし
 
 ---
@@ -171,6 +171,26 @@ OLED: &engine.OLEDConfig{
 
 レイヤー切り替え時に現在のレイヤー番号（"L0"〜"L3"）を画面中央に表示します。
 
+### アナログジョイスティック（マウス）
+
+```go
+Joystick: &engine.JoystickConfig{
+    PinX:         29,            // X 軸 ADC ピンの GPIO 番号
+    PinY:         28,            // Y 軸 ADC ピンの GPIO 番号
+    PinButton:    0,             // ボタンピンの GPIO 番号
+    EnableButton: true,          // ボタン有効化
+    ButtonKey:    keycode.None,  // None でマウス左クリック、キーコード指定で HID キー送信
+    Sensitivity:  5,             // 感度 1〜10（省略時: 5）
+    DeadZone:     3000,          // デッドゾーン閾値（省略時: 3000）
+    InvertX:      false,         // X 軸反転
+    InvertY:      false,         // Y 軸反転
+},
+```
+
+ジョイスティックの ADC 値をマウスカーソル移動にマッピングします。`_ "machine/usb/hid/mouse"` の blank import が必要です。
+
+> `Sensitivity` と `DeadZone` はゼロ値の場合にデフォルト値が適用されます。
+
 ---
 
 ## Config リファレンス
@@ -184,6 +204,7 @@ engine.Config{
     Encoder     *EncoderConfig   // ロータリーエンコーダー（nil で無効）
     LED         *LEDConfig       // RGB LED（nil で無効）
     OLED        *OLEDConfig      // OLED ディスプレイ（nil で無効）
+    Joystick    *JoystickConfig  // アナログジョイスティック（nil で無効）
     Peripherals []Peripheral     // カスタム周辺機器（上級者向け）
 }
 ```
@@ -245,13 +266,13 @@ tinygo flash -target=waveshare-rp2040-zero .
 
 ## 実装例
 
-[`examples/zero-kb02/`](examples/zero-kb02/) に、エンコーダー・LED・OLED を含むフル機能の実装例があります。
+[`examples/zero-kb02/`](examples/zero-kb02/) に、エンコーダー・LED・OLED・ジョイスティックを含むフル機能の実装例があります。
 
 ---
 
 ## ロードマップ
 
-今後の開発計画は [ROADMAP.md](ROADMAP.md) を参照してください。Joystick + Gamepad 対応、Split キーボード対応などを予定しています。
+今後の開発計画は [ROADMAP.md](ROADMAP.md) を参照してください。Split キーボード対応、Gamepad HID 対応などを予定しています。
 
 ---
 
