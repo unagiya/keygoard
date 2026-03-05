@@ -3,97 +3,59 @@
 各フェーズは「実機で動作確認済み・main にマージ済み」になって初めて完了とする。
 フェーズ完了時に `v0.N.0` タグを打つ。
 
-## Phase 1（現在の目標）: 最小 HID キーボード
+## Feature Backlog
 
-**ゴール: RP2040 が USB キーボードとして OS に認識され、キー入力が届く**
+以下は未着手の機能候補。次の Phase 開始時にこの中から選定して取り込む。
 
-> コード実装は `feature/matrix-scan` ブランチで完了済み。
-> 残りは実機ビルド・動作確認のみ。
-
-- [x] マトリクススキャン（COL2ROW、zero-kb02 のピン配置で動作）
-- [x] デバウンス処理
-- [x] 基本 6KRO キーボード HID（TinyGo 標準の `machine/usb/hid` を使う）
-- [x] レイヤー 0 のみのキーマップ（3×4 固定）
-- [x] `tinygo build -target=waveshare-rp2040-zero` でビルド成功
-- [x] macOS でキーボードとして認識されることを確認
-- [x] 実際に文字が入力できることを確認
-
-**Phase 1 スコープ外（追加しない）:**
-- Split / OLED / LED / Encoder / Joystick
-- 複数レイヤー / MO / TG / TT / LT / KC_TRNS
-- Gamepad / Composite HID
-- マクロ / コンボ / NKRO / Flash 永続化
+| # | Feature | 概要 | 備考 |
+|---|---------|------|------|
+| 1 | Split 対応 | UART 双方向通信、マスター/スレーブ分離 | |
+| 2 | Gamepad HID | Composite HID（keyboard + gamepad） | TinyGo Issue #3474 の解決が前提 |
+| 3 | マクロ / コンボ | マクロ・コンボキー機能 | |
+| 4 | Flash 永続化 | キーマップ・設定の Flash 永続化 | |
+| 5 | NKRO | N-Key Rollover 対応 | |
+| 6 | LED エフェクト拡張 | リアクティブライティング・個別 LED 制御 | |
+| 7 | OLED 自由描画 | 任意テキスト・カスタム画像の表示 | |
+| 8 | CLI ツール | `keygoard init` コマンド | |
 
 ---
 
-## Phase 2: フレームワーク API ブラッシュアップ（Phase 1 完了後）
+## Completed Phases
 
-**ゴール: ファームウェア側の記述を最小化し、フレームワークらしい API を提供する**
+### Phase 1: 最小 HID キーボード ✅ `v0.1.0`
 
-- [x] `engine.Run()` 導入（メインループをエンジン内部に隠蔽）
-- [x] USB Product Name のカスタマイズ対応
+RP2040 が USB キーボードとして OS に認識され、キー入力が届く。
 
----
+- マトリクススキャン（COL2ROW）、デバウンス処理
+- 基本 6KRO キーボード HID
+- レイヤー 0 のみのキーマップ（3×4 固定）
 
-## Phase 3: レイヤーシステム（Phase 2 完了後）
+### Phase 2: フレームワーク API ブラッシュアップ ✅ `v0.2.0`
 
-- [x] 複数レイヤー（MO / TG）
-- [x] KC_TRNS（透過キー）
-- [x] TT / LT（タップ検出）
+ファームウェア側の記述を最小化し、フレームワークらしい API を提供。
 
----
+- `engine.Run()` 導入
+- USB Product Name のカスタマイズ対応
 
-## Phase 4: 周辺機器（Phase 3 完了後）
+### Phase 3: レイヤーシステム ✅ `v0.3.0`
 
-- [x] Peripheral インターフェース定義・engine 統合
-- [x] ロータリーエンコーダー（GP3/GP4）
-- [x] RGB LED WS2812/SK6812（GP1、12 LED）
-- [x] OLED SSD1306（GP12/GP13、ソフトウェア回転対応）
+- 複数レイヤー（MO / TG）、KC_TRNS（透過キー）
+- TT / LT（タップ検出）
 
----
+### Phase 4: 周辺機器 ✅ `v0.4.0`
 
-## Phase 5: パッケージ構造リファクタリング（Phase 4 完了後）
+- Peripheral インターフェース定義・engine 統合
+- ロータリーエンコーダー / RGB LED / OLED SSD1306
 
-**ゴール: フレームワーク利用者が `engine` と `keycode` の 2 パッケージだけで使えるようにする**
+### Phase 5: パッケージ構造リファクタリング ✅ `v0.5.0`
 
-- [x] engine パッケージを Facade 化（matrix・ペリフェラルの設定を Config に統合）
-- [x] `engine.Pin` / `I2CBus` / `Rotation` / `LEDType` 型導入（machine 隠蔽）
-- [x] `internal/` に layer / tap / matrix を移動（外部 import 不可）
-- [x] `internal/peripheral/` に encoder / led / oled を移動
-- [x] ドキュメント・テストの整合性を維持
-- [x] README.md をユーザー向けドキュメントとして整備
+フレームワーク利用者が `engine` と `keycode` の 2 パッケージだけで使える構造に移行。
 
----
+- engine Facade 化、`internal/` へのパッケージ移動
+- `engine.Pin` / `I2CBus` / `Rotation` / `LEDType` 型導入
 
-## Phase 6: アナログジョイスティック — マウスポインティングデバイス（Phase 5 完了後）
+### Phase 6: アナログジョイスティック — マウスポインティングデバイス ✅ `v0.6.0`
 
-- アナログジョイスティック（ADC GP28/GP29 → マウスカーソル移動）
+- アナログジョイスティック（ADC → マウスカーソル移動）
 - Composite HID（keyboard + mouse）
 - デッドゾーン・感度設定・軸反転・ボタン対応
-
-> **方針転換:** 当初は keyboard + gamepad の Composite HID を計画していたが、
-> TinyGo Issue #3474 により gamepad の Composite HID が動作しないことが判明。
-> keyboard + mouse は sago35/tinygo-keyboard で実証済みのため、
-> ジョイスティックの ADC 値をマウス移動にマッピングする方式を採用した。
-> gamepad 対応は TinyGo 側の修正後に Phase 8 以降で再検討する。
-
----
-
-## Phase 7: Split 対応（Phase 6 完了後）
-
-- UART 双方向通信
-- マスター/スレーブ分離
-
----
-
-## Phase 8 以降: 高度な機能（Phase 7 完了後）
-
-以下の機能は優先度・依存関係に応じて Phase 8 以降で段階的に実装する。
-
-- Gamepad HID（TinyGo Issue #3474 の解決後に再検討）
-- マクロ / コンボ
-- Flash 永続化（キーマップ・設定）
-- NKRO
-- LED エフェクト拡張（リアクティブライティング・個別 LED 制御）
-- OLED 自由描画（任意テキスト・カスタム画像の表示）
-- CLI ツール（`keygoard init`）
