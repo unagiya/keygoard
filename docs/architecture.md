@@ -11,7 +11,7 @@
 | ターゲット MCU | RP2040 | Waveshare RP2040-Zero |
 | TinyGo ターゲット名 | `waveshare-rp2040-zero` | TinyGo 組み込みターゲット定義 |
 | 標準ライブラリ（TinyGo） | `machine` | GPIO 制御 |
-| 標準ライブラリ（TinyGo） | `machine/usb/hid` | USB HID キーボード実装 |
+| 標準ライブラリ（TinyGo） | `machine/usb/hid` | USB HID キーボード・マウス実装 |
 | サードパーティ | `tinygo-org/drivers` | 周辺機器ドライバ（使用許可済み） |
 
 ### バージョン要件
@@ -52,7 +52,7 @@
 | `go test ./keycode/... ./internal/...` | `machine` 非依存パッケージ | 標準 Go で実行可能。`//go:build tinygo` タグ付きファイルは除外 |
 | `tinygo test -target=waveshare-rp2040-zero ./...` | 全パッケージ（実機テスト） | 実機接続が必要 |
 
-ハードウェア非依存ロジック（`keycode`, `internal/matrix/debounce`, `internal/layer`, `internal/tap`, `internal/peripheral/encoder/quadrature`, `internal/peripheral/oled/font`）にはユニットテストを書く。
+ハードウェア非依存ロジック（`keycode`, `internal/matrix/debounce`, `internal/layer`, `internal/tap`, `internal/peripheral/encoder/quadrature`, `internal/peripheral/oled/font`, `internal/peripheral/joystick/axis`）にはユニットテストを書く。
 テストファイルは対象と同じパッケージ内に `*_test.go` で配置する。
 
 ### ブランチ戦略
@@ -131,7 +131,7 @@ v0.1.0 で「USB HID として認識されない」問題が発生した経緯�
 | ルール | 理由 |
 |---|---|
 | TinyGo 標準の `machine/usb/hid` を使う | 自前 HID 記述子はバグの温床になる |
-| Composite HID は Phase 6 まで追加しない | キーボード単体の認識を先に確実にする |
+| Composite HID は keyboard + mouse のみ | TinyGo Issue #3474 により keyboard + gamepad は動作しない。mouse は Phase 6 で追加 |
 | USB エニュメレーション完了まで（起動後 500ms）スキャンを開始しない | エニュメレーション前の HID 送信は無効になる |
 
 ### サードパーティパッケージ

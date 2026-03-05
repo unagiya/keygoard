@@ -15,7 +15,7 @@
 | ファイル          | machine 依存 | 役割                                         |
 |-------------------|:------------:|----------------------------------------------|
 | `keyboard.go`     | あり         | エンジン本体（`New` / `Run` / tick ループ）  |
-| `config.go`       | あり         | `Config` / `EncoderConfig` / `LEDConfig` / `OLEDConfig` 定義 |
+| `config.go`       | あり         | `Config` / `EncoderConfig` / `LEDConfig` / `OLEDConfig` / `JoystickConfig` 定義 |
 | `keymap.go`       | なし         | `Keymap` 構造体・`RowCount` / `ColCount` / `MaxLayers` 再エクスポート |
 | `types.go`        | なし         | `Pin` / `I2CBus` / `Rotation` 型定義         |
 | `peripheral.go`   | なし         | `Peripheral` インターフェース定義            |
@@ -54,17 +54,18 @@ type Config struct {
     ColPins     []Pin         // マトリクス列ピン（出力）
     RowPins     []Pin         // マトリクス行ピン（入力プルダウン）
     Keymap      *Keymap       // キーマップ
-    Encoder     *EncoderConfig // ロータリーエンコーダー（nil で無効）
-    LED         *LEDConfig     // RGB LED（nil で無効）
-    OLED        *OLEDConfig    // OLED ディスプレイ（nil で無効）
-    Peripherals []Peripheral   // カスタム周辺機器
+    Encoder     *EncoderConfig  // ロータリーエンコーダー（nil で無効）
+    LED         *LEDConfig      // RGB LED（nil で無効）
+    OLED        *OLEDConfig     // OLED ディスプレイ（nil で無効）
+    Joystick    *JoystickConfig // アナログジョイスティック（nil で無効）
+    Peripherals []Peripheral    // カスタム周辺機器
 }
 ```
 
 - `ProductName` は ASCII のみ、最大 126 文字
 - `ColPins` / `RowPins` は GPIO 番号を `Pin` 型で指定する
 - マトリクススキャナーは `engine.New()` 内部で自動生成される
-- 標準ペリフェラル（Encoder/LED/OLED）も Config から内部生成される
+- 標準ペリフェラル（Encoder/LED/OLED/Joystick）も Config から内部生成される
 
 ### ペリフェラル設定
 
@@ -93,6 +94,18 @@ type OLEDConfig struct {
     Width    int16    // 画面幅（px）
     Height   int16    // 画面高（px）
     Rotation Rotation // ソフトウェア回転
+}
+
+type JoystickConfig struct {
+    PinX         Pin             // X 軸 ADC ピン
+    PinY         Pin             // Y 軸 ADC ピン
+    PinButton    Pin             // ボタンピン（EnableButton が true の場合のみ）
+    EnableButton bool            // ボタン有効化
+    ButtonKey    keycode.Keycode // ボタンキーコード（None でマウス左クリック）
+    Sensitivity  uint8           // 感度 1〜10（ゼロ値 → 5）
+    DeadZone     uint16          // デッドゾーン閾値（ゼロ値 → 3000）
+    InvertX      bool            // X 軸反転
+    InvertY      bool            // Y 軸反転
 }
 ```
 
@@ -129,7 +142,7 @@ type Keymap struct {
 ### Peripheral
 
 ```go
-const MaxPeripherals = 4
+const MaxPeripherals = 8
 
 type Peripheral interface {
     Init()
@@ -177,6 +190,7 @@ type Peripheral interface {
 | `internal/peripheral/encoder` | ロータリーエンコーダー |
 | `internal/peripheral/led` | RGB LED |
 | `internal/peripheral/oled` | OLED ディスプレイ |
+| `internal/peripheral/joystick` | アナログジョイスティック |
 
 Pin → `machine.Pin` の変換は `keyboard.go` 内のヘルパー関数（`pinsToCols`, `pinsToRows`, `i2cBus`）が担います。
 

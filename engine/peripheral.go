@@ -3,7 +3,7 @@ package engine
 import "github.com/unagiya/keygoard/keycode"
 
 // MaxPeripherals はエンジンに登録できる周辺機器の最大数です。
-const MaxPeripherals = 4
+const MaxPeripherals = 8
 
 // Peripheral はエンジンに統合される周辺機器のインターフェースです。
 // engine パッケージはこのインターフェース経由で周辺機器を呼び出すため、

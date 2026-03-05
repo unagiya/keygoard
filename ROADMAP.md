@@ -65,10 +65,17 @@
 
 ---
 
-## Phase 6: Joystick + Gamepad（Phase 5 完了後）
+## Phase 6: アナログジョイスティック — マウスポインティングデバイス（Phase 5 完了後）
 
-- アナログジョイスティック（GP28/GP29）
-- Composite HID（キーボード＋ゲームパッド）← Composite はここまで遅らせる
+- アナログジョイスティック（ADC GP28/GP29 → マウスカーソル移動）
+- Composite HID（keyboard + mouse）
+- デッドゾーン・感度設定・軸反転・ボタン対応
+
+> **方針転換:** 当初は keyboard + gamepad の Composite HID を計画していたが、
+> TinyGo Issue #3474 により gamepad の Composite HID が動作しないことが判明。
+> keyboard + mouse は sago35/tinygo-keyboard で実証済みのため、
+> ジョイスティックの ADC 値をマウス移動にマッピングする方式を採用した。
+> gamepad 対応は TinyGo 側の修正後に Phase 8 以降で再検討する。
 
 ---
 
@@ -83,6 +90,7 @@
 
 以下の機能は優先度・依存関係に応じて Phase 8 以降で段階的に実装する。
 
+- Gamepad HID（TinyGo Issue #3474 の解決後に再検討）
 - マクロ / コンボ
 - Flash 永続化（キーマップ・設定）
 - NKRO

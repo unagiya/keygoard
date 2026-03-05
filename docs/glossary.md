@@ -48,7 +48,7 @@
 | **HID レポート（HID Report）** | キーボードが OS に送信するデータパケット。本プロジェクトでは 8 バイト固定長 |
 | **6KRO（6-Key Rollover）** | 同時押しを最大 6 キーまで認識できる方式。本プロジェクトの Phase 1〜3 で採用 |
 | **NKRO（N-Key Rollover）** | すべてのキーの同時押しを認識できる方式（Phase 8 で実装予定） |
-| **Composite HID** | キーボードとゲームパッドなど複数の HID デバイスを 1 つの USB デバイスとして組み合わせる方式（Phase 6 で実装予定） |
+| **Composite HID** | キーボードとマウスなど複数の HID デバイスを 1 つの USB デバイスとして組み合わせる方式（Phase 6 で keyboard + mouse を実装） |
 | **HID 記述子（HID Descriptor）** | HID デバイスの能力を OS に伝えるバイト列。本プロジェクトでは TinyGo 標準の `machine/usb/hid` を使い自前実装しない |
 
 ### ハードウェア関連
@@ -63,6 +63,9 @@
 | **エンコーダー（Encoder）** | ロータリーエンコーダー。回転操作を A/B 信号として出力する入力デバイス（Phase 3 以降） |
 | **WS2812 / SK6812** | プログラマブル RGB LED。1 本の信号線で色・輝度を制御できる（Phase 3 以降） |
 | **SSD1306** | I2C 接続の OLED ディスプレイドライバ IC（Phase 3 以降） |
+| **ジョイスティック（Joystick）** | アナログスティック入力デバイス。ADC 2 本（X/Y 軸）で傾きを検出し、マウスカーソル移動にマッピングする（Phase 6） |
+| **ADC（Analog-to-Digital Converter）** | アナログ電圧をデジタル値（0〜65535 の uint16）に変換する MCU 内蔵ペリフェラル。ジョイスティックの軸読み取りに使用する |
+| **デッドゾーン（Dead Zone）** | ジョイスティック中心付近で ADC ノイズによるカーソルジッターを防止するための閾値範囲。閾値内の値はゼロとして扱う |
 | **フラッシュ（Flash）** | MCU 内蔵の不揮発性メモリ。キーマップや設定の永続化に使用する（Phase 8 以降） |
 | **リアクティブライティング（Reactive Lighting）** | キー押下時に対応する LED を点灯させるエフェクト。マトリクス位置と LED インデックスのマッピングが必要（Phase 8 以降） |
 | **OLED 自由描画** | OLED ディスプレイに任意のテキストやカスタム画像を描画する機能（Phase 8 以降） |
@@ -110,6 +113,10 @@
 | Flash | フラッシュ | 不揮発性メモリ |
 | Split | スプリット / 分割 | 左右分割キーボード |
 | Peripheral | 周辺機器 | encoder / led / oled / joystick の総称 |
+| Joystick | ジョイスティック | アナログスティック入力デバイス |
+| ADC | ADC | アナログ-デジタル変換器 |
+| Dead Zone | デッドゾーン | ジョイスティック中心付近の不感帯 |
+| Sensitivity | 感度 | マウス移動速度の倍率 |
 | Composite | コンポジット | 複合 HID デバイス |
 | Rollover | ロールオーバー | 同時押し認識数の仕様 |
 | Stable state | 確定状態 | デバウンス後の確定済みキー状態 |
@@ -137,6 +144,9 @@
 | `Debouncer` | `internal/matrix` | キーごとのデバウンス状態を保持する構造体 |
 | `Resolver` | `internal/layer` | レイヤー解決（最上位アクティブレイヤーから走査） |
 | `Detector` | `internal/tap` | タップ/ホールド判定の構造体 |
+| `AxisMapper` | `internal/peripheral/joystick` | ADC 生値→マウス移動量変換 |
+| `Joystick` | `internal/peripheral/joystick` | ジョイスティック制御構造体 |
+| `JoystickConfig` | `engine` | ジョイスティック設定 |
 
 ### メソッド・関数
 
@@ -156,7 +166,7 @@
 | `RowCount` | `engine`（`internal/matrix` から再エクスポート） | マトリクスの行数（3） |
 | `ColCount` | `engine`（`internal/matrix` から再エクスポート） | マトリクスの列数（4） |
 | `MaxLayers` | `engine`（`internal/layer` から再エクスポート） | 最大レイヤー数（4） |
-| `MaxPeripherals` | `engine` | 登録可能な周辺機器の最大数（4） |
+| `MaxPeripherals` | `engine` | 登録可能な周辺機器の最大数（8） |
 | `MaxLayerColors` | `engine` | レイヤーごとの色設定の最大数（4） |
 | `debounceThr` | `internal/matrix` | デバウンス確定閾値（5 サイクル、非公開） |
 | `None` | `keycode` | キー未割り当てを表す定数（`0x0000`） |
